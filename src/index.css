@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --color-admin-50: var(--admin-50);
+  --color-admin-100: var(--admin-100);
+  --color-admin-200: var(--admin-200);
+  --color-admin-300: var(--admin-300);
+  --color-admin-400: var(--admin-400);
+  --color-admin-500: var(--admin-500);
+  --color-admin-600: var(--admin-600);
+  --color-admin-700: var(--admin-700);
+  --color-admin-800: var(--admin-800);
+  --color-admin-900: var(--admin-900);
+  --color-admin-950: var(--admin-950);
+}
+
+:root {
+  /* Default to blue */
+  --admin-50: #eff6ff;
+  --admin-100: #dbeafe;
+  --admin-200: #bfdbfe;
+  --admin-300: #93c5fd;
+  --admin-400: #60a5fa;
+  --admin-500: #3b82f6;
+  --admin-600: #2563eb;
+  --admin-700: #1d4ed8;
+  --admin-800: #1e40af;
+  --admin-900: #1e3a8a;
+  --admin-950: #172554;
+}
+
+[data-theme="red"] {
+  --admin-50: #fef2f2;
+  --admin-100: #fee2e2;
+  --admin-200: #fecaca;
+  --admin-300: #fca5a5;
+  --admin-400: #f87171;
+  --admin-500: #ef4444;
+  --admin-600: #dc2626;
+  --admin-700: #b91c1c;
+  --admin-800: #991b1b;
+  --admin-900: #7f1d1d;
+  --admin-950: #450a0a;
+}
+
+[data-theme="green"] {
+  --admin-50: #f0fdf4;
+  --admin-100: #dcfce7;
+  --admin-200: #bbf7d0;
+  --admin-300: #86efac;
+  --admin-400: #4ade80;
+  --admin-500: #22c55e;
+  --admin-600: #16a34a;
+  --admin-700: #15803d;
+  --admin-800: #166534;
+  --admin-900: #14532d;
+  --admin-950: #052e16;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: marquee 60s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee:hover,
+.animate-marquee:focus,
+.animate-marquee:active {
+  animation-play-state: paused;
+}
+
+/* Hide chat messages & input when video modal is active */
+body.is-video-playing .chat-container,
+body.is-video-playing .chat-input-wrapper {
+  display: none !important;
+}

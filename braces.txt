@@ -1,0 +1,104 @@
+1:import React, { useState, useRef, useEffect } from 'react';
+2:import { Send, Paperclip, Bot, User, Sparkles, Image as ImageIcon, X, AlertCircle, FileText, CheckCircle2, HelpCircle } from 'lucide-react';
+3:import { ChatMessage } from '../types';
+5:export const ChatAssistant: React.FC = () => {
+7:    {
+11:      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+12:    }
+16:  const [attachedImage, setAttachedImage] = useState<{ data: string; mimeType: string; name: string } | null>(null);
+24:  const scrollToBottom = () => {
+25:    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+26:  };
+28:  useEffect(() => {
+30:  }, [messages, isLoading]);
+32:  useEffect(() => {
+33:    const loadTrainingData = async () => {
+35:      try {
+36:        const { fetchAllSheetData } = await import('../lib/googleSheets');
+43:        const contextStr = trainingRows.slice(1).map(r => {
+47:          return `Q: ${r[1]}\nA: ${r[2]}`;
+48:        }).join('\n\n');
+55:      } catch (err) {
+57:      }
+58:    };
+60:  }, []);
+62:  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+67:    reader.onload = () => {
+69:      setAttachedImage({
+73:      });
+74:    };
+76:  };
+78:  const handleSend = async (textToSend?: string) => {
+82:    const userMessage: ChatMessage = {
+86:      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+87:      image: attachedImage ? { data: attachedImage.data, mimeType: attachedImage.mimeType } : undefined
+88:    };
+96:    try {
+97:      const { appendRow } = await import('../lib/googleSheets');
+99:      try {
+101:      } catch (e) { /* ignore log error if auth missing */ }
+103:      const response = await fetch('/api/chat', {
+105:        headers: { 'Content-Type': 'application/json' },
+106:        body: JSON.stringify({
+107:          messages: [...messages, userMessage].map((m) => ({
+110:          })),
+112:          image: currentImage ? { data: currentImage.data, mimeType: currentImage.mimeType } : undefined
+113:        })
+114:      });
+117:      if (!response.ok) {
+119:      }
+121:      const assistantMessage: ChatMessage = {
+125:        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+126:      };
+131:      try {
+133:      } catch (e) { /* ignore log error */ }
+135:    } catch (err: any) {
+136:      const errorMessage: ChatMessage = {
+139:        content: `Xin lỗi, hệ thống AI đang gặp sự cố kết nối: ${err.message}. Vui lòng liên hệ trực tiếp Bộ phận Một cửa Phường Tân Mỹ (028.38123456) để được hỗ trợ ngay.`,
+140:        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+141:      };
+143:    } finally {
+145:    }
+159:        {/* Chat Header Banner */}
+179:        {/* Quick Suggestion Chips */}
+184:          {quickPrompts.map((prompt, index) => (
+186:              key={index}
+187:              onClick={() => handleSend(prompt)}
+190:              {prompt}
+192:          ))}
+195:        {/* Messages Area */}
+199:            style={{
+205:            }} 
+208:          {messages.map((msg) => {
+212:                key={msg.id}
+213:                className={`flex items-start gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+216:                  className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm overflow-hidden ${
+220:                  }`}
+222:                  {isUser ? <User className="w-4 h-4 sm:w-5 sm:h-5" /> : <img src="https://i.postimg.cc/21pt1tmH/LOGO-TRUNG-TAM.png" alt="Bot" className="w-full h-full object-contain p-0.5 sm:p-1" />}
+225:                <div className={`max-w-[88%] sm:max-w-[80%] md:max-w-[70%] ${isUser ? 'text-right' : 'text-left'}`}>
+228:                      {isUser ? 'Bạn' : 'Trợ lý AI Tân Mỹ'}
+231:                    <span>{msg.timestamp}</span>
+235:                    className={`p-3 sm:p-4 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
+239:                    }`}
+241:                    {msg.image && (
+248:                          src={`data:${msg.image.mimeType};base64,${msg.image.data}`}
+253:                    )}
+254:                    <div className="whitespace-pre-wrap">{msg.content}</div>
+259:          })}
+261:          {isLoading && (
+273:          )}
+274:          <div ref={messagesEndRef} />
+278:        {/* Input & Image Attachment Area */}
+280:          {attachedImage && (
+284:                <span className="truncate">Đã chọn ảnh: <span className="font-bold">{attachedImage.name}</span></span>
+287:                onClick={() => setAttachedImage(null)}
+294:          )}
+299:              ref={fileInputRef}
+300:              onChange={handleImageUpload}
+305:              onClick={() => fileInputRef.current?.click()}
+314:              value={input}
+315:              onChange={(e) => setInput(e.target.value)}
+316:              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+322:              onClick={() => handleSend()}
+323:              disabled={(!input.trim() && !attachedImage) || isLoading}
+340:};

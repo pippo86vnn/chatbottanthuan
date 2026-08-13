@@ -1,0 +1,11 @@
+{
+  "name": "Supabase *** Cổng DVC Phường Tân Mỹ Offical",
+  "description": "Supabase",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
