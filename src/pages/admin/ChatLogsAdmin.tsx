@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Download, AlertCircle, ThumbsDown, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, AlertCircle, ThumbsDown, Search, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 import { supabase } from '../../lib/supabase';
 
 interface ChatLog {
+  id?: number;
   thoiGian: string;
   cauHoi: string;
   aiTraLoi: string;
@@ -78,6 +79,7 @@ export const ChatLogsAdmin: React.FC = () => {
             : 'none';
 
           return {
+            id: item.id,
             thoiGian: String(item.created_at ? new Date(item.created_at).toLocaleString('vi-VN') : ''),
             cauHoi: String(item.cau_hoi || ''),
             aiTraLoi: String(item.ai_tra_loi || ''),
@@ -100,6 +102,19 @@ export const ChatLogsAdmin: React.FC = () => {
   useEffect(() => {
     handleFetchData();
   }, [handleFetchData]);
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa nhật ký này?')) return;
+    
+    try {
+      const { error } = await supabase.from('nhat_ky_chat').delete().eq('id', id);
+      if (error) throw error;
+      handleFetchData();
+    } catch (error: any) {
+      console.error('Error deleting chat log:', error);
+      alert('Có lỗi xảy ra khi xóa: ' + error.message);
+    }
+  };
 
   const handleFilterDislikes = () => {
     setShowDislikesOnly(!showDislikesOnly);
@@ -164,6 +179,7 @@ export const ChatLogsAdmin: React.FC = () => {
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-slate-50 shadow-sm z-10">
             <tr className="border-b border-slate-200 text-slate-500 text-sm">
+              <th className="p-4 font-medium w-16 text-center">Thao tác</th>
               <th className="p-4 font-medium whitespace-nowrap">Thời gian</th>
               <th className="p-4 font-medium min-w-[250px]">Câu hỏi của dân</th>
               <th className="p-4 font-medium min-w-[300px]">AI trả lời</th>
@@ -181,6 +197,15 @@ export const ChatLogsAdmin: React.FC = () => {
             ) : (
               nhatKyData.map((item, index) => (
                 <tr key={index} className="hover:bg-slate-50 transition-colors text-sm">
+                  <td className="p-4 text-center">
+                    <button 
+                      onClick={() => item.id && handleDelete(item.id)}
+                      className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors inline-flex items-center justify-center shadow-sm"
+                      title="Xóa"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                   <td className="p-4 text-slate-500 whitespace-nowrap">{item.thoiGian}</td>
                   <td className="p-4 text-slate-800 font-medium">{item.cauHoi}</td>
                   <td className="p-4 text-slate-600 line-clamp-3 leading-relaxed" title={item.aiTraLoi}>{item.aiTraLoi}</td>

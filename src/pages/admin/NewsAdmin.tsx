@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, AlertCircle, Search, PlusCircle, X, Save, Loader2, CheckCircle2, Edit2 } from 'lucide-react';
+import { Download, AlertCircle, Search, PlusCircle, X, Save, Loader2, CheckCircle2, Edit2, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface NewsItem {
@@ -148,6 +148,19 @@ export const NewsAdmin: React.FC = () => {
     }
   };
 
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa tin tức này?')) return;
+    
+    try {
+      const { error } = await supabase.from('tin_tuc').delete().eq('id', id);
+      if (error) throw error;
+      handleFetchData();
+    } catch (error: any) {
+      console.error('Error deleting news:', error);
+      alert('Có lỗi xảy ra khi xóa: ' + error.message);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-6rem)]">
       <div className="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
@@ -202,7 +215,7 @@ export const NewsAdmin: React.FC = () => {
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead className="sticky top-0 bg-slate-50 z-10 shadow-sm">
             <tr className="border-b border-slate-200 text-slate-500 text-sm">
-              <th className="p-4 font-medium w-16 text-center">Sửa</th>
+              <th className="p-4 font-medium w-24 text-center">Thao tác</th>
               <th className="p-4 font-medium w-64">Tiêu đề</th>
               <th className="p-4 font-medium w-32">Ngày đăng</th>
               <th className="p-4 font-medium w-32">Trạng thái Ticker</th>
@@ -221,13 +234,22 @@ export const NewsAdmin: React.FC = () => {
               filteredData.map((item, index) => (
                 <tr key={index} className="hover:bg-slate-50/80 transition-colors text-sm bg-white group">
                   <td className="p-4 align-top text-center">
-                    <button 
-                      onClick={() => openEditModal(item)}
-                      className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors inline-flex items-center justify-center shadow-sm"
-                      title="Sửa tin tức"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <button 
+                        onClick={() => openEditModal(item)}
+                        className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors inline-flex items-center justify-center shadow-sm"
+                        title="Sửa tin tức"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => item.id && handleDelete(item.id)}
+                        className="p-1.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors inline-flex items-center justify-center shadow-sm"
+                        title="Xóa tin tức"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                   <td className="p-4 text-slate-800 font-semibold align-top whitespace-normal break-words leading-relaxed">{item.tieu_de}</td>
                   <td className="p-4 text-slate-600 align-top whitespace-nowrap">{item.ngay_dang}</td>
