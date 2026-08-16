@@ -5,6 +5,7 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
 import { createClient } from "@supabase/supabase-js";
+import { sendTelegramAlert } from "./src/lib/telegram";
 
 // Nạp các biến môi trường từ .env.local và .env
 dotenv.config({ path: '.env.local' });
@@ -54,6 +55,35 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
 
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: "Messages array is required" });
+    }
+
+    const lastMessage = messages[messages.length - 1]?.content || "";
+    const userQuestion = lastMessage;
+
+    // Trigger 1: Bắt thông tin liên hệ (Contact Request)
+    const phoneRegex = /0[3|5|7|8|9][0-9]{8}/;
+    const phoneMatch = userQuestion.match(phoneRegex);
+    const isContactKeyword = /(gọi lại|liên hệ)/i.test(userQuestion);
+    
+    if (phoneMatch || isContactKeyword) {
+      const foundPhoneNumber = phoneMatch ? phoneMatch[0] : 'Chưa cung cấp SĐT, yêu cầu gọi lại';
+      sendTelegramAlert('CONTACT', userQuestion, foundPhoneNumber);
+      return res.json({ reply: "Tôi đã ghi nhận thông tin liên hệ của bạn. Cán bộ phụ trách sẽ sớm gọi lại hỗ trợ bạn." });
+    }
+
+    // Trigger 2: Nội dung nhạy cảm (Security Alert)
+    const sensitiveKeywords = ['khiếu nại', 'tố cáo', 'tham nhũng', 'chửi bới'];
+    const isSensitive = sensitiveKeywords.some(keyword => userQuestion.toLowerCase().includes(keyword));
+    
+    if (isSensitive) {
+      sendTelegramAlert('SECURITY', userQuestion);
+      return res.json({ reply: "Xin lỗi, tôi là trợ lý ảo hỗ trợ thủ tục. Với các vấn đề khiếu nại, phản ánh, vui lòng liên hệ trực tiếp số điện thoại đường dây nóng của UBND." });
+    }
+
+    // Trigger 3 (Part 1): Thiếu dữ liệu (Fallback) từ RAG
+    if (!context || context.trim() === 'Không tìm thấy thủ tục phù hợp.' || context.trim() === '') {
+      sendTelegramAlert('FALLBACK', userQuestion);
+      return res.json({ reply: "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!" });
     }
 
     const systemInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Mỹ. Nhiệm vụ của bạn là hỗ trợ người dân và doanh nghiệp tra cứu thủ tục hành chính, giải đáp các thắc mắc về quy định, lịch tiếp công dân, địa chỉ liên hệ và thông tin hoạt động.
@@ -109,7 +139,6 @@ ${context || 'Không tìm thấy thủ tục phù hợp.'}`;
         }
       });
     }
-    const lastMessage = messages[messages.length - 1]?.content || "";
     latestParts.push({ text: lastMessage });
 
     contents.push({
@@ -127,10 +156,23 @@ ${context || 'Không tìm thấy thủ tục phù hợp.'}`;
     });
 
     const reply = response.text || "Xin lỗi, tôi không thể trả lời lúc này.";
+    
+    // Trigger 3 (Part 2): Kết quả từ Gemini chứa pattern từ chối
+    const rejectionPatterns = ["tôi không có thông tin", "không tìm thấy dữ liệu", "không có dữ liệu", "chưa có dữ liệu", "không tìm thấy thủ tục", "chưa có thông tin"];
+    const isRejection = rejectionPatterns.some(pattern => reply.toLowerCase().includes(pattern));
+    
+    if (isRejection) {
+      sendTelegramAlert('FALLBACK', userQuestion);
+      return res.json({ reply: "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!" });
+    }
+
     res.json({ reply });
   } catch (err: any) {
     console.error("Chat API error:", err);
-    res.status(500).json({ error: err.message });
+    // Trigger 4: Lỗi API (System Error)
+    const lastMessage = req.body?.messages?.[req.body.messages?.length - 1]?.content || "Không xác định";
+    sendTelegramAlert('ERROR', lastMessage, err.message);
+    res.status(500).json({ error: "Hệ thống đang bảo trì. Vui lòng quay lại sau." });
   }
 });
 
