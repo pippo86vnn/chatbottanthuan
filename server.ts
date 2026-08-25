@@ -64,7 +64,7 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
     const phoneRegex = /0[3|5|7|8|9][0-9]{8}/;
     const phoneMatch = userQuestion.match(phoneRegex);
     const isContactKeyword = /(gọi lại|liên hệ)/i.test(userQuestion);
-    
+
     if (phoneMatch || isContactKeyword) {
       const foundPhoneNumber = phoneMatch ? phoneMatch[0] : 'Chưa cung cấp SĐT, yêu cầu gọi lại';
       sendTelegramAlert('CONTACT', userQuestion, foundPhoneNumber);
@@ -74,7 +74,7 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
     // Trigger 2: Nội dung nhạy cảm (Security Alert)
     const sensitiveKeywords = ['khiếu nại', 'tố cáo', 'tham nhũng', 'chửi bới'];
     const isSensitive = sensitiveKeywords.some(keyword => userQuestion.toLowerCase().includes(keyword));
-    
+
     if (isSensitive) {
       sendTelegramAlert('SECURITY', userQuestion);
       return res.json({ reply: "Xin lỗi, tôi là trợ lý ảo hỗ trợ thủ tục. Với các vấn đề khiếu nại, phản ánh, vui lòng liên hệ trực tiếp số điện thoại đường dây nóng của UBND." });
@@ -105,11 +105,10 @@ Bước 3: Nếu câu hỏi nằm ngoài phạm vi thủ tục dịch vụ công
 - LUÔN dùng đúng cụm từ: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
 
 === QUY TẮC TRÌNH BÀY (UI/UX) ===
-- Khi tư vấn 1 thủ tục cụ thể, bắt buộc đúng 4 ý theo thứ tự, mỗi ý CHỈ xuất hiện 1 LẦN DUY NHẤT, KHÔNG lặp lại nội dung giữa các ý:
+- Khi tư vấn 1 thủ tục cụ thể, bắt buộc đúng 3 ý theo thứ tự, mỗi ý CHỈ xuất hiện 1 LẦN DUY NHẤT, KHÔNG lặp lại nội dung giữa các ý:
   1. Giấy tờ cần chuẩn bị (chỉ liệt kê hồ sơ — KHÔNG nhắc lại cách nộp ở đây).
-  2. Nơi nộp: luôn nêu đủ 3 cách — nộp trực tuyến tại dichvucong.gov.vn; nộp qua bưu điện; hoặc đến Trung tâm Phục vụ hành chính công phường Tân Mỹ để được hướng dẫn và hỗ trợ nộp trực tuyến.
-  3. Thời gian xử lý & Lệ phí.
-  4. Căn cứ pháp lý — CHỈ thêm nếu dữ liệu nội bộ có sẵn số hiệu, trích dẫn CHÍNH XÁC nguyên văn, không viết tắt, không suy diễn, không tự bịa. Nếu dữ liệu không có, bỏ hẳn ý này, không đoán.
+  2. Thời gian xử lý & Lệ phí.
+  3. Căn cứ pháp lý — CHỈ thêm nếu dữ liệu nội bộ có sẵn số hiệu, trích dẫn CHÍNH XÁC nguyên văn, không viết tắt, không suy diễn, không tự bịa. Nếu dữ liệu không có, bỏ hẳn ý này, không đoán.
 - Dùng số thứ tự (1, 2, 3...), KHÔNG dùng ký tự đặc biệt (*, #) hay gạch đầu dòng (-, •).
 - Tách các đoạn bằng 1 dòng trống để dễ đọc trên điện thoại.
 
@@ -156,11 +155,11 @@ ${context || 'Không tìm thấy thủ tục phù hợp.'}`;
     });
 
     const reply = response.text || "Xin lỗi, tôi không thể trả lời lúc này.";
-    
+
     // Trigger 3 (Part 2): Kết quả từ Gemini chứa pattern từ chối
     const rejectionPatterns = ["tôi không có thông tin", "không tìm thấy dữ liệu", "không có dữ liệu", "chưa có dữ liệu", "không tìm thấy thủ tục", "chưa có thông tin"];
     const isRejection = rejectionPatterns.some(pattern => reply.toLowerCase().includes(pattern));
-    
+
     if (isRejection) {
       sendTelegramAlert('FALLBACK', userQuestion);
       return res.json({ reply: "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!" });
