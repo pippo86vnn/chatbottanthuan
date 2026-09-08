@@ -49,6 +49,31 @@ function getAiClient(): GoogleGenAI {
 
 
 
+async function getTTS(text: string) {
+  const ttsApiKey = process.env.GOOGLE_TTS_API_KEY;
+  if (!ttsApiKey) return "";
+  try {
+    const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${ttsApiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: { text },
+        voice: { languageCode: 'vi-VN', name: 'vi-VN-Neural2-A' },
+        audioConfig: { audioEncoding: 'MP3' }
+      })
+    });
+    if (ttsResponse.ok) {
+      const data = await ttsResponse.json();
+      return data.audioContent || "";
+    } else {
+      console.error("Lỗi Google TTS API:", await ttsResponse.text());
+    }
+  } catch (err) {
+    console.error("TTS Error:", err);
+  }
+  return "";
+}
+
 app.post("/api/chat", chatLimiter, async (req, res) => {
   try {
     const { messages, image, context } = req.body;
@@ -68,7 +93,8 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
     if (phoneMatch || isContactKeyword) {
       const foundPhoneNumber = phoneMatch ? phoneMatch[0] : 'Chưa cung cấp SĐT, yêu cầu gọi lại';
       sendTelegramAlert('CONTACT', userQuestion, foundPhoneNumber);
-      return res.json({ reply: "Tôi đã ghi nhận thông tin liên hệ của bạn. Cán bộ phụ trách sẽ sớm gọi lại hỗ trợ bạn." });
+      const replyText = "Tôi đã ghi nhận thông tin liên hệ của bạn. Cán bộ phụ trách sẽ sớm gọi lại hỗ trợ bạn.";
+      return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
     }
 
     // Trigger 2: Nội dung nhạy cảm (Security Alert)
@@ -77,13 +103,15 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
 
     if (isSensitive) {
       sendTelegramAlert('SECURITY', userQuestion);
-      return res.json({ reply: "Xin lỗi, tôi là trợ lý ảo hỗ trợ thủ tục. Với các vấn đề khiếu nại, phản ánh, vui lòng liên hệ trực tiếp số điện thoại đường dây nóng của UBND." });
+      const replyText = "Xin lỗi, tôi là trợ lý ảo hỗ trợ thủ tục. Với các vấn đề khiếu nại, phản ánh, vui lòng liên hệ trực tiếp số điện thoại đường dây nóng của UBND.";
+      return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
     }
 
     // Trigger 3 (Part 1): Thiếu dữ liệu (Fallback) từ RAG
     if (!context || context.trim() === 'Không tìm thấy thủ tục phù hợp.' || context.trim() === '') {
       sendTelegramAlert('FALLBACK', userQuestion);
-      return res.json({ reply: "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!" });
+      const replyText = "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!";
+      return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
     }
 
     const systemInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Mỹ. Nhiệm vụ của bạn là hỗ trợ người dân và doanh nghiệp tra cứu thủ tục hành chính, giải đáp các thắc mắc về quy định, lịch tiếp công dân, địa chỉ liên hệ và thông tin hoạt động.
@@ -161,10 +189,11 @@ ${context || 'Không tìm thấy thủ tục phù hợp.'}`;
 
     if (isRejection) {
       sendTelegramAlert('FALLBACK', userQuestion);
-      return res.json({ reply: "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!" });
+      const replyText = "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!";
+      return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
     }
 
-    res.json({ reply });
+    res.json({ reply, audioBase64: await getTTS(reply) });
   } catch (err: any) {
     console.error("Chat API error:", err);
     // Trigger 4: Lỗi API (System Error)

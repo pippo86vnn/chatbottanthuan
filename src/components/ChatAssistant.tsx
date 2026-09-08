@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Markdown from 'react-markdown';
-import { Send, Camera, User, Image as ImageIcon, X, FileText, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Send, Camera, User, Image as ImageIcon, X, FileText, ThumbsUp, ThumbsDown, Mic } from 'lucide-react';
 import { ChatMessage } from '../types';
 import { getSessionId, logChatMessage, submitRating } from '../config';
 import { supabase } from '../lib/supabase';
-
+import { useVoiceChat } from '../hooks/useVoiceChat';
 const TypewriterText: React.FC<{
   content: string;
   isActive: boolean;
@@ -78,6 +78,40 @@ export const ChatAssistant: React.FC = () => {
   const sessionId = useRef<string>(getSessionId());
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    isRecording,
+    isProcessing,
+    isPlaying,
+    transcript,
+    finalTranscript,
+    startRecording,
+    playWelcomeMessage,
+    playAudio
+  } = useVoiceChat();
+
+  const [isWelcomed, setIsWelcomed] = useState(false);
+
+  const handleInteractionToUnlockAudio = () => {
+    if (!isWelcomed) {
+      // playWelcomeMessage(); // Uncomment to enable welcome voice message
+      setIsWelcomed(true);
+    }
+  };
+
+  // Cập nhật text realtime khi đang thu âm
+  useEffect(() => {
+    if (transcript) {
+      setInput(transcript);
+    }
+  }, [transcript]);
+
+  // Tự động gửi khi kết thúc thu âm (khi có finalTranscript)
+  useEffect(() => {
+    if (finalTranscript) {
+      handleSend(finalTranscript);
+    }
+  }, [finalTranscript]);
 
   const scrollToBottom = useCallback((smooth = true) => {
     if (chatContainerRef.current) {
@@ -243,6 +277,11 @@ export const ChatAssistant: React.FC = () => {
       setMessages((prev) => [...prev, assistantMessage]);
       setActiveTypingId(assistantMessageId);
 
+      // --- Phát âm thanh nếu Server trả về audioBase64 ---
+      if (data.audioBase64) {
+        playAudio(data.audioBase64);
+      }
+
       // Ghi nhật ký hội thoại
       try {
         await logChatMessage({ cauHoi: query, aiTraLoi: data.reply });
@@ -270,7 +309,7 @@ export const ChatAssistant: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-full px-1 sm:px-3 py-2 sm:py-6">
+    <div className="w-full max-w-full px-1 sm:px-3 py-2 sm:py-6" onClickCapture={handleInteractionToUnlockAudio}>
       <div className="bg-white rounded-2xl shadow-xl border border-admin-100 overflow-hidden flex flex-col h-[82vh] sm:h-[75vh]">
 
         {/* Chat Header Banner */}
@@ -439,13 +478,30 @@ export const ChatAssistant: React.FC = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-              placeholder="Nhập câu hỏi thủ tục hành chính (khai sinh, kết hôn...)..."
-              className="flex-1 min-w-0 bg-slate-100 border border-slate-200 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-admin-600 focus:bg-white transition"
+              placeholder={isRecording ? "Hệ thống đang lắng nghe..." : "Nhập câu hỏi thủ tục hành chính (khai sinh, kết hôn...)..."}
+              disabled={isRecording || isProcessing || isPlaying}
+              className="flex-1 min-w-0 bg-slate-100 border border-slate-200 rounded-xl px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-admin-600 focus:bg-white transition disabled:opacity-50"
             />
 
             <button
+              type="button"
+              onClick={startRecording}
+              disabled={isPlaying || isProcessing || isRecording}
+              title={isRecording ? "Đang thu âm" : "Gửi bằng giọng nói"}
+              className={`p-2.5 sm:p-3 rounded-xl transition flex items-center justify-center shrink-0 border
+                ${isRecording 
+                  ? 'bg-red-500 text-white border-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.7)]' 
+                  : 'bg-slate-100 border-slate-200 text-slate-700 hover:text-admin-900 hover:bg-slate-200'
+                }
+                ${(isPlaying || isProcessing) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              `}
+            >
+              <Mic className={`w-4 h-4 sm:w-5 sm:h-5 ${isRecording ? 'animate-bounce' : ''}`} />
+            </button>
+
+            <button
               onClick={() => handleSend()}
-              disabled={(!input.trim() && !attachedImage) || isLoading}
+              disabled={(!input.trim() && !attachedImage) || isLoading || isRecording || isProcessing || isPlaying}
               className="bg-admin-900 hover:bg-admin-800 disabled:opacity-50 text-white px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-medium transition flex items-center gap-1.5 shadow-md shrink-0"
             >
               <span className="hidden sm:inline">Gửi hỏi</span>
