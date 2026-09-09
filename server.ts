@@ -50,27 +50,8 @@ function getAiClient(): GoogleGenAI {
 
 
 async function getTTS(text: string) {
-  const ttsApiKey = process.env.GOOGLE_TTS_API_KEY;
-  if (!ttsApiKey) return "";
-  try {
-    const ttsResponse = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${ttsApiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        input: { text },
-        voice: { languageCode: 'vi-VN', name: 'vi-VN-Neural2-A' },
-        audioConfig: { audioEncoding: 'MP3' }
-      })
-    });
-    if (ttsResponse.ok) {
-      const data = await ttsResponse.json();
-      return data.audioContent || "";
-    } else {
-      console.error("Lỗi Google TTS API:", await ttsResponse.text());
-    }
-  } catch (err) {
-    console.error("TTS Error:", err);
-  }
+  // Tạm tắt chức năng chuyển văn bản thành giọng nói (TTS) để tránh lỗi API
+  // Nếu muốn dùng lại, bạn cần thiết lập Google Cloud Service Account
   return "";
 }
 
