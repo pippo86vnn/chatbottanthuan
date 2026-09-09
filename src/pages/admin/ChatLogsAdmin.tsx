@@ -18,6 +18,7 @@ export const ChatLogsAdmin: React.FC = () => {
   const [nhatKyData, setNhatKyData] = useState<ChatLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
   
   // Filters
   const [showDislikesOnly, setShowDislikesOnly] = useState(false);
@@ -41,6 +42,7 @@ export const ChatLogsAdmin: React.FC = () => {
   const handleFetchData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setSelectedIds([]); // Reset selection when fetching data
     try {
       // Bắt đầu query với tính năng đếm tổng số dòng
       let query = supabase
@@ -109,10 +111,28 @@ export const ChatLogsAdmin: React.FC = () => {
     try {
       const { error } = await supabase.from('nhat_ky_chat').delete().eq('id', id);
       if (error) throw error;
+      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
       handleFetchData();
     } catch (error: any) {
       console.error('Error deleting chat log:', error);
       alert('Có lỗi xảy ra khi xóa: ' + error.message);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${selectedIds.length} nhật ký đã chọn?`)) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.from('nhat_ky_chat').delete().in('id', selectedIds);
+      if (error) throw error;
+      setSelectedIds([]);
+      handleFetchData();
+    } catch (error: any) {
+      console.error('Error deleting chat logs:', error);
+      alert('Có lỗi xảy ra khi xóa: ' + error.message);
+      setIsLoading(false);
     }
   };
 
@@ -153,6 +173,16 @@ export const ChatLogsAdmin: React.FC = () => {
             <span className="hidden sm:inline">Chỉ hiện các câu trả lời bị Dislike (Tích đỏ)</span>
             <span className="sm:hidden">Dislike</span>
           </button>
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              disabled={isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50"
+            >
+              <Trash2 className="w-4 h-4 shrink-0" />
+              Xóa đã chọn ({selectedIds.length})
+            </button>
+          )}
           <button
             onClick={() => handleFetchData()}
             disabled={isLoading}
@@ -179,6 +209,20 @@ export const ChatLogsAdmin: React.FC = () => {
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-slate-50 shadow-sm z-10">
             <tr className="border-b border-slate-200 text-slate-500 text-sm">
+              <th className="p-4 font-medium w-12 text-center">
+                <input 
+                  type="checkbox" 
+                  checked={selectedIds.length === nhatKyData.length && nhatKyData.length > 0}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedIds(nhatKyData.map(item => item.id!).filter(Boolean));
+                    } else {
+                      setSelectedIds([]);
+                    }
+                  }}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+              </th>
               <th className="p-4 font-medium w-16 text-center">Thao tác</th>
               <th className="p-4 font-medium whitespace-nowrap">Thời gian</th>
               <th className="p-4 font-medium min-w-[250px]">Câu hỏi của dân</th>
@@ -190,13 +234,27 @@ export const ChatLogsAdmin: React.FC = () => {
           <tbody className="divide-y divide-slate-200">
             {nhatKyData.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-8 text-center text-slate-500">
+                <td colSpan={7} className="p-8 text-center text-slate-500">
                   {isLoading ? 'Đang tải dữ liệu...' : 'Không tìm thấy nhật ký phù hợp.'}
                 </td>
               </tr>
             ) : (
               nhatKyData.map((item, index) => (
                 <tr key={index} className="hover:bg-slate-50 transition-colors text-sm">
+                  <td className="p-4 text-center">
+                    <input 
+                      type="checkbox" 
+                      checked={item.id ? selectedIds.includes(item.id) : false}
+                      onChange={(e) => {
+                        if (e.target.checked && item.id) {
+                          setSelectedIds(prev => [...prev, item.id!]);
+                        } else if (item.id) {
+                          setSelectedIds(prev => prev.filter(id => id !== item.id));
+                        }
+                      }}
+                      className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                    />
+                  </td>
                   <td className="p-4 text-center">
                     <button 
                       onClick={() => item.id && handleDelete(item.id)}

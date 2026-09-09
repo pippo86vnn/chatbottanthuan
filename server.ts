@@ -122,10 +122,8 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
 - KHÔNG giải thích dông dài các điều luật, KHÔNG viết lời chào/lời kết sáo rỗng.
 
 === QUY TẮC TRẢ LỜI ===
-Bước 1: Kiểm tra xem câu hỏi có thể trả lời bằng DỮ LIỆU NỘI BỘ (bên dưới) hay không. Nếu có, BẮT BUỘC trả lời dựa trên dữ liệu đó.
-Bước 2: Nếu DỮ LIỆU NỘI BỘ trống hoặc không chứa câu trả lời, được phép dùng kiến thức sẵn có để giải đáp.
-Bước 3: Nếu câu hỏi nằm ngoài phạm vi thủ tục dịch vụ công, xin lỗi và hướng dẫn Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) để được hỗ trợ.
-- Nếu thấy "Cấp Quận/Huyện" trong dữ liệu/kết quả tìm kiếm, luôn đổi thành "cấp Phường" (không còn cấp Quận/Huyện).
+Bước 1: Kiểm tra xem câu hỏi có thể trả lời bằng DỮ LIỆU NỘI BỘ (bên dưới) hay không. Nếu có, BẮT BUỘC trả lời dựa trên dữ liệu đó. Nếu nơi nộp thông qua Cổng dịch vụ Công trực tuyến thì câu trả lời phải dẫn link đến [Cổng Dịch vụ Công trực tuyến](https://dichvucong.gov.vn)
+Bước 2: Nếu DỮ LIỆU NỘI BỘ trống hoặc không chứa câu trả lời, hoặc câu hỏi nằm ngoài phạm vi thủ tục dịch vụ công, xin lỗi và hướng dẫn Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949để được hỗ trợ.
 
 === QUY TẮC DANH XƯNG ĐỊA PHƯƠNG ===
 - TUYỆT ĐỐI KHÔNG dùng "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ".
@@ -189,7 +187,7 @@ ${context || 'Không tìm thấy thủ tục phù hợp.'}`;
 
     if (isRejection) {
       sendTelegramAlert('FALLBACK', userQuestion);
-      const replyText = "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!";
+      const replyText = "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949 để được hỗ trợ.";
       return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
     }
 

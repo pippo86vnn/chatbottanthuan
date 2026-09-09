@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Markdown from 'react-markdown';
-import { Send, Camera, User, Image as ImageIcon, X, FileText, ThumbsUp, ThumbsDown, Mic } from 'lucide-react';
+import { Send, Camera, User, Image as ImageIcon, X, FileText, ThumbsUp, ThumbsDown, Mic, Headset } from 'lucide-react';
 import { ChatMessage } from '../types';
 import { getSessionId, logChatMessage, submitRating } from '../config';
 import { supabase } from '../lib/supabase';
 import { useVoiceChat } from '../hooks/useVoiceChat';
+import { LiveVoiceModal } from './LiveVoiceModal';
 const TypewriterText: React.FC<{
   content: string;
   isActive: boolean;
@@ -72,6 +73,7 @@ export const ChatAssistant: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [attachedImage, setAttachedImage] = useState<{ data: string; mimeType: string; name: string } | null>(null);
   const [activeTypingId, setActiveTypingId] = useState<string | null>('1');
+  const [isLiveVoiceModalOpen, setIsLiveVoiceModalOpen] = useState(false);
 
   const [ratings, setRatings] = useState<Record<string, 'Like' | 'Dislike'>>({});
 
@@ -499,6 +501,17 @@ export const ChatAssistant: React.FC = () => {
               <Mic className={`w-4 h-4 sm:w-5 sm:h-5 ${isRecording ? 'animate-bounce' : ''}`} />
             </button>
 
+            {/* Tạm ẩn chức năng Live Voice đang thử nghiệm
+            <button
+              type="button"
+              onClick={() => setIsLiveVoiceModalOpen(true)}
+              className="p-2.5 sm:p-3 rounded-xl transition flex items-center justify-center shrink-0 border bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-700"
+              title="Trò chuyện trực tiếp với AI"
+            >
+              <Headset className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            */}
+
             <button
               onClick={() => handleSend()}
               disabled={(!input.trim() && !attachedImage) || isLoading || isRecording || isProcessing || isPlaying}
@@ -516,6 +529,7 @@ export const ChatAssistant: React.FC = () => {
         </div>
 
       </div>
+      <LiveVoiceModal isOpen={isLiveVoiceModalOpen} onClose={() => setIsLiveVoiceModalOpen(false)} />
     </div>
   );
 };
