@@ -10,6 +10,7 @@ export function useLiveVoice() {
   const [isConnected, setIsConnected] = useState(false);
   const [status, setStatus] = useState<LiveVoiceStatus>({ status: 'Đã ngắt kết nối', colorClass: 'text-slate-500' });
   const [latency, setLatency] = useState<number | null>(null);
+  const [talkTime, setTalkTime] = useState<number>(0);
   
   const wsRef = useRef<WebSocket | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -21,6 +22,8 @@ export function useLiveVoice() {
   const isSetupCompleteRef = useRef<boolean>(false);
   const nextPlayTimeRef = useRef<number>(0);
   const thuTucDataRef = useRef<any[]>([]);
+  const talkTimeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -108,6 +111,27 @@ export function useLiveVoice() {
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
+      const triggerGoodbye = () => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          updateStatus("Đang ngắt kết nối do im lặng...", "text-slate-500");
+          ws.send(JSON.stringify({
+            clientContent: {
+              turns: [{
+                role: "user",
+                parts: [{ text: "HỆ THỐNG: Khách hàng đã im lặng quá 20 giây. Hãy nói: 'Dạ do không nhận được phản hồi, tôi xin phép ngắt kết nối. Xin chào tạm biệt anh chị.' và tuyệt đối không hỏi thêm câu hỏi nào." }]
+              }],
+              turnComplete: true
+            }
+          }));
+          setTimeout(() => endCall(true), 6000);
+        }
+      };
+
+      const resetSilenceTimer = () => {
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = setTimeout(triggerGoodbye, 20000);
+      };
+
       processor.onaudioprocess = (e) => {
         if (!ws || ws.readyState !== WebSocket.OPEN || !isSetupCompleteRef.current) return;
         const inputData = e.inputBuffer.getChannelData(0);
@@ -138,24 +162,21 @@ export function useLiveVoice() {
         isSetupCompleteRef.current = false;
         updateStatus("Đã kết nối. Đang khởi tạo AI...", "text-amber-500");
 
-        const systemPrompt = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Mỹ. Nhiệm vụ của bạn là hỗ trợ người dân và doanh nghiệp tra cứu thủ tục hành chính, giải đáp các thắc mắc về quy định, lịch tiếp công dân, địa chỉ liên hệ và thông tin hoạt động.
+        const systemPrompt = `Bạn là Trợ lý AI hành chính công của Trung tâm Phục vụ hành chính công phường Tân Mỹ (tuyệt đối không gọi là UBND Phường). Bạn đang giao tiếp bằng GIỌNG NÓI trực tiếp với người dân.
 
-=== VAI TRÒ VÀ TÔN CHỈ ===
-- Bạn là Trợ lý AI hành chính công của Phường Tân Mỹ. Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
-- Luôn giữ thái độ chuyên nghiệp, ân cần. Nội dung trả lời phải thật NGẮN GỌN, SÚC TÍCH.
-- KHÔNG giải thích dông dài các điều luật, KHÔNG viết lời chào/lời kết sáo rỗng.
+=== TÍNH CÁCH VÀ NGỮ ĐIỆU (THÂN THIỆN, CHUYÊN NGHIỆP) ===
+- Hãy đóng vai một giao dịch viên nhiệt tình, ân cần. Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
+- Thường xuyên sử dụng các từ ngữ lịch sự như: "Dạ", "Vâng", "Thưa anh/chị", "Dạ để tôi kiểm tra giúp anh/chị nhé".
+- NÓI NGẮN GỌN, như giao tiếp tự nhiên hằng ngày. KHÔNG đọc như cái máy. Dùng nhiều dấu phẩy (,) và dấu chấm (.) để tạo nhịp ngưng tự nhiên khi phát âm.
+- Tuyệt đối KHÔNG đọc các ký tự gạch đầu dòng (như dấu sao *, gạch ngang -). Chuyển chúng thành các từ nối như "Thứ nhất là...", "Tiếp theo là...".
+
+=== TỐI ƯU GIAO TIẾP ===
+- Trả lời ĐÚNG TRỌNG TÂM. Ví dụ: Nếu khách hỏi "Lệ phí bao nhiêu?", chỉ cần đáp: "Dạ, lệ phí cho thủ tục này là [số tiền] ạ.", không cần đọc thêm hồ sơ, giấy tờ nếu khách không hỏi.
+- Nếu không nghe rõ do ồn, hãy nói: "Dạ, anh/chị có thể nói lại giúp tôi được không ạ, tôi nghe chưa rõ."
 
 === QUY TẮC TÌM KIẾM DỮ LIỆU ===
-- TUYỆT ĐỐI KHÔNG TỰ BỊA RA NỘI DUNG.
-- KHI CÔNG DÂN HỎI VỀ BẤT KỲ THỦ TỤC NÀO, BẠN BẮT BUỘC PHẢI SỬ DỤNG CÔNG CỤ "tra_cuu_thu_tuc" ĐỂ TÌM KIẾM TRONG HỆ THỐNG.
-- Nếu không tìm thấy, hãy xin lỗi và hướng dẫn liên hệ trực tiếp: Bộ phận Một cửa - Trung tâm Phục vụ hành chính công phường Tân Mỹ (Số 7, đường Tân Phú, Phường Tân Mỹ, TP.HCM hoặc Hotline: 02837850949).
-
-=== QUY TẮC DANH XƯNG ĐỊA PHƯƠNG ===
-- TUYỆT ĐỐI KHÔNG dùng "Ủy ban nhân dân Phường Tân Mỹ". LUÔN dùng đúng cụm từ: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
-
-=== QUY TẮC TRÌNH BÀY ===
-- Trả lời ĐÚNG TRỌNG TÂM và TRỰC TIẾP vào câu hỏi của công dân.
-- KHÔNG CẦN liệt kê đầy đủ toàn bộ thông tin (như giấy tờ, thời gian, lệ phí) nếu công dân không hỏi đến. (Ví dụ: Nếu công dân chỉ hỏi "Lệ phí khai sinh là bao nhiêu?", hãy chỉ trả lời thông tin về lệ phí).`;
+- Không tự bịa thông tin. Phải dùng công cụ "tra_cuu_thu_tuc" khi người dân hỏi về thủ tục cụ thể.
+- Nếu không tìm thấy, hãy nói: "Dạ xin lỗi anh chị, hiện tôi chưa tìm thấy thủ tục này. Anh chị vui lòng liên hệ trực tiếp Bộ phận Một cửa số 7 đường Tân Phú, hoặc gọi số 028 3785 0949 để được hỗ trợ ạ."`;
 
         ws.send(JSON.stringify({
           setup: {
@@ -199,6 +220,11 @@ export function useLiveVoice() {
         if (data.setupComplete) {
             isSetupCompleteRef.current = true;
             updateStatus("Sẵn sàng! Đang lắng nghe...", "text-emerald-600");
+            
+            setTalkTime(0);
+            if (talkTimeIntervalRef.current) clearInterval(talkTimeIntervalRef.current);
+            talkTimeIntervalRef.current = setInterval(() => setTalkTime(p => p + 1), 1000);
+            resetSilenceTimer();
         }
 
         if (turnStartTimeRef.current > 0 && data.serverContent && data.serverContent.modelTurn) {
@@ -209,6 +235,7 @@ export function useLiveVoice() {
         // Handle Audio
         if (data.serverContent) {
           if (data.serverContent.modelTurn) {
+            resetSilenceTimer();
             for (const p of data.serverContent.modelTurn.parts) {
               if (p.inlineData && p.inlineData.data) {
                   playAudioChunk(p.inlineData.data);
@@ -222,6 +249,7 @@ export function useLiveVoice() {
 
         // Handle Function Calling
         if (data.toolCall) {
+          resetSilenceTimer();
           const functionCalls = data.toolCall.functionCalls;
           const toolResponses = [];
           
@@ -244,13 +272,16 @@ export function useLiveVoice() {
               
               let responseText = "Không tìm thấy thủ tục nào khớp với từ khoá này.";
               if (results.length > 0) {
-                responseText = results.slice(0, 8).map((item: any) => {
+                responseText = results.slice(0, 3).map((item: any) => {
                   let text = `Tên: ${item.ten_thu_tuc || 'Chưa cập nhật'}\n`;
                   if (item.cach_thuc_nop) text += `Cách nộp: ${item.cach_thuc_nop}\n`;
-                  const includeKeys = ['mo_ta_ngan', 'thoi_gian_xu_ly', 'le_phi', 'can_cu_phap_ly', 'ho_so_giay_to'];
+                  // BỎ can_cu_phap_ly để tiết kiệm token tối đa
+                  const includeKeys = ['mo_ta_ngan', 'thoi_gian_xu_ly', 'le_phi', 'ho_so_giay_to'];
                   for (const key of includeKeys) {
                     if (item[key]) {
-                      text += `${key}: ${item[key]}\n`;
+                      // Rút gọn text nếu quá dài (VD: cắt bớt nếu nội dung dài hơn 500 ký tự)
+                      const val = item[key].length > 500 ? item[key].substring(0, 500) + '...' : item[key];
+                      text += `${key}: ${val}\n`;
                     }
                   }
                   return text.trim();
@@ -297,6 +328,8 @@ export function useLiveVoice() {
 
   const endCall = useCallback((resetStatus = true) => {
     setIsConnected(false);
+    if (talkTimeIntervalRef.current) clearInterval(talkTimeIntervalRef.current);
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (processorRef.current) { 
         processorRef.current.disconnect(); 
         processorRef.current = null; 
@@ -331,6 +364,7 @@ export function useLiveVoice() {
     isConnected,
     status,
     latency,
+    talkTime,
     startCall,
     endCall
   };

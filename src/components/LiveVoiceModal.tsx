@@ -8,7 +8,13 @@ interface LiveVoiceModalProps {
 }
 
 export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose }) => {
-  const { isConnected, status, latency, startCall, endCall } = useLiveVoice();
+  const { isConnected, status, talkTime, startCall, endCall } = useLiveVoice();
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   if (!isOpen) return null;
 
@@ -69,10 +75,10 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
               <span className={`font-bold text-center ${status.colorClass}`}>{status.status}</span>
             </div>
             <div className="bg-white p-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col items-center justify-center">
-              <span className="text-slate-400 mb-1 text-xs">Độ trễ (Ping)</span>
+              <span className="text-slate-400 mb-1 text-xs">Thời gian gọi</span>
               <span className="font-bold text-emerald-600 flex items-center gap-1">
                 <Activity className="w-3.5 h-3.5" />
-                {latency !== null ? `${latency} ms` : '-- ms'}
+                {isConnected ? formatTime(talkTime) : '00:00'}
               </span>
             </div>
           </div>

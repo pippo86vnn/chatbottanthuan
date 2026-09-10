@@ -501,7 +501,7 @@ export const ChatAssistant: React.FC = () => {
               <Mic className={`w-4 h-4 sm:w-5 sm:h-5 ${isRecording ? 'animate-bounce' : ''}`} />
             </button>
 
-            {/* Tạm ẩn chức năng Live Voice đang thử nghiệm
+            {/* Nút Live Voice (Đã mở) */}
             <button
               type="button"
               onClick={() => setIsLiveVoiceModalOpen(true)}
@@ -510,7 +510,6 @@ export const ChatAssistant: React.FC = () => {
             >
               <Headset className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            */}
 
             <button
               onClick={() => handleSend()}
