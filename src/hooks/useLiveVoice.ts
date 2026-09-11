@@ -118,7 +118,7 @@ export function useLiveVoice() {
             clientContent: {
               turns: [{
                 role: "user",
-                parts: [{ text: "HỆ THỐNG: Khách hàng đã im lặng quá 20 giây. Hãy nói: 'Dạ do không nhận được phản hồi, tôi xin phép ngắt kết nối. Xin chào tạm biệt anh chị.' và tuyệt đối không hỏi thêm câu hỏi nào." }]
+                parts: [{ text: "HỆ THỐNG: Khách hàng đã im lặng quá 30 giây. Hãy nói: 'Dạ do không nhận được phản hồi, tôi xin phép ngắt kết nối. Xin chào tạm biệt anh chị.' và tuyệt đối không hỏi thêm câu hỏi nào." }]
               }],
               turnComplete: true
             }
@@ -129,7 +129,7 @@ export function useLiveVoice() {
 
       const resetSilenceTimer = () => {
         if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = setTimeout(triggerGoodbye, 20000);
+        silenceTimerRef.current = setTimeout(triggerGoodbye, 30000);
       };
 
       processor.onaudioprocess = (e) => {
@@ -272,7 +272,7 @@ export function useLiveVoice() {
               
               let responseText = "Không tìm thấy thủ tục nào khớp với từ khoá này.";
               if (results.length > 0) {
-                responseText = results.slice(0, 3).map((item: any) => {
+                responseText = results.slice(0, 10).map((item: any) => {
                   let text = `Tên: ${item.ten_thu_tuc || 'Chưa cập nhật'}\n`;
                   if (item.cach_thuc_nop) text += `Cách nộp: ${item.cach_thuc_nop}\n`;
                   // BỎ can_cu_phap_ly để tiết kiệm token tối đa
