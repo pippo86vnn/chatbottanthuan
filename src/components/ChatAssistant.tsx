@@ -180,41 +180,41 @@ export const ChatAssistant: React.FC = () => {
       if (data && data.length > 0) {
         // Tách câu hỏi thành các từ khóa dài > 2 ký tự
         const keywords = query.toLowerCase().split(' ').filter((w) => w.trim().length > 2);
-        
+
         // Chấm điểm từng thủ tục dựa trên số lượng từ khóa trùng khớp
         const scoredData = data.map((item: any) => {
           let score = 0;
           const title = (item.ten_thu_tuc || '').toLowerCase();
           const desc = (item.mo_ta_ngan || '').toLowerCase();
           const keywords_db = (item.tu_khoa_tim_kiem || '').toLowerCase();
-          
+
           keywords.forEach((kw) => {
             if (title.includes(kw)) score += 3;
             if (keywords_db.includes(kw)) score += 2;
             if (desc.includes(kw)) score += 1;
           });
-          
+
           return { item, score };
         });
 
-        // Lọc các thủ tục có điểm > 0, sắp xếp giảm dần và lấy 2 kết quả tốt nhất
+        // Lọc các thủ tục có điểm > 0, sắp xếp giảm dần và lấy 5 kết quả tốt nhất
         const bestMatches = scoredData
           .filter((x) => x.score > 0)
           .sort((a, b) => b.score - a.score)
-          .slice(0, 2)
+          .slice(0, 5)
           .map((x) => x.item);
 
         if (bestMatches.length > 0) {
           // Lấy thêm thông tin biểu mẫu và video liên quan
           const maThuTucList = bestMatches.map((m: any) => m.ma_thu_tuc).filter(Boolean);
           let bieuMauData: any[] = [];
-          
+
           if (maThuTucList.length > 0) {
             const { data: bmData } = await supabase
               .from('bieu_mau')
               .select('*')
               .in('ma_thu_tuc', maThuTucList);
-              
+
             if (bmData) bieuMauData = bmData;
           }
 
@@ -226,18 +226,18 @@ export const ChatAssistant: React.FC = () => {
             const thoiGian = item.thoi_gian_xu_ly || '';
             const lePhi = item.le_phi || '';
             const canCu = item.can_cu_phap_ly || 'Chưa có thông tin';
-            
+
             // Tìm biểu mẫu liên quan
             const relatedForms = bieuMauData.filter(bm => bm.ma_thu_tuc === maThuTuc && bm.ten_bieu_mau);
             const relatedVideos = bieuMauData.filter(bm => bm.ma_thu_tuc === maThuTuc && bm.tieu_de_video);
 
             let contextStr = `Thủ tục: ${ten}\nMô tả: ${moTa}\nHồ sơ và cách thức nộp: ${cachThuc}\nThời gian xử lý: ${thoiGian}\nLệ phí: ${lePhi}\nCăn cứ pháp lý: ${canCu}`;
-            
+
             if (relatedForms.length > 0) {
-               contextStr += `\nBiểu mẫu đính kèm:\n` + relatedForms.map(bm => `- ${bm.ten_bieu_mau}: ${bm.link_tai || 'Chưa có link'}`).join('\n');
+              contextStr += `\nBiểu mẫu đính kèm:\n` + relatedForms.map(bm => `- ${bm.ten_bieu_mau}: ${bm.link_tai || 'Chưa có link'}`).join('\n');
             }
             if (relatedVideos.length > 0) {
-               contextStr += `\nVideo hướng dẫn:\n` + relatedVideos.map(bm => `- ${bm.tieu_de_video}: ${bm.link_video || 'Chưa có link'}`).join('\n');
+              contextStr += `\nVideo hướng dẫn:\n` + relatedVideos.map(bm => `- ${bm.tieu_de_video}: ${bm.link_video || 'Chưa có link'}`).join('\n');
             }
 
             return contextStr;
@@ -355,11 +355,10 @@ export const ChatAssistant: React.FC = () => {
                   className={`flex items-start gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
                 >
                   <div
-                    className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm overflow-hidden ${
-                      isUser
+                    className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm overflow-hidden ${isUser
                         ? 'bg-admin-700 text-white'
                         : 'bg-white text-admin-900 border border-admin-800'
-                    }`}
+                      }`}
                   >
                     {isUser ? <User className="w-4 h-4 sm:w-5 sm:h-5" /> : <img src="https://i.postimg.cc/21pt1tmH/LOGO-TRUNG-TAM.png" alt="Bot" className="w-full h-full object-contain p-0.5 sm:p-1" />}
                   </div>
@@ -374,11 +373,10 @@ export const ChatAssistant: React.FC = () => {
                     </div>
 
                     <div
-                      className={`p-3.5 sm:p-5 rounded-2xl text-base sm:text-lg leading-relaxed shadow-sm ${
-                        isUser
+                      className={`p-3.5 sm:p-5 rounded-2xl text-base sm:text-lg leading-relaxed shadow-sm ${isUser
                           ? 'bg-slate-200 text-slate-900 rounded-tr-none font-normal'
                           : 'bg-admin-900 text-white rounded-tl-none font-normal'
-                      }`}
+                        }`}
                     >
                       {msg.image && (
                         <div className="mb-2.5 rounded-lg overflow-hidden border border-admin-700 bg-admin-950/50 p-1">
@@ -491,8 +489,8 @@ export const ChatAssistant: React.FC = () => {
               disabled={isPlaying || isProcessing || isRecording}
               title={isRecording ? "Đang thu âm" : "Gửi bằng giọng nói"}
               className={`p-2.5 sm:p-3 rounded-xl transition flex items-center justify-center shrink-0 border
-                ${isRecording 
-                  ? 'bg-red-500 text-white border-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.7)]' 
+                ${isRecording
+                  ? 'bg-red-500 text-white border-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.7)]'
                   : 'bg-slate-100 border-slate-200 text-slate-700 hover:text-admin-900 hover:bg-slate-200'
                 }
                 ${(isPlaying || isProcessing) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
