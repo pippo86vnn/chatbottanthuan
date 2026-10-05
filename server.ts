@@ -152,7 +152,7 @@ ${context || 'Không tìm thấy thủ tục phù hợp.'}`;
     });
 
     const response = await getAiClient().models.generateContent({
-      model: "gemini-3.5-flash-lite",
+      model: "gemini-3.8-flash",
       contents: contents,
       config: {
         systemInstruction: systemInstruction,
