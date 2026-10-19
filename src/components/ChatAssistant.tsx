@@ -263,7 +263,20 @@ export const ChatAssistant: React.FC = () => {
         })
       });
 
-      const data = await response.json();
+      let data: any = {};
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        throw new Error(
+          response.status === 504
+            ? 'Yêu cầu tra cứu mất nhiều thời gian hơn dự kiến, vui lòng thử lại sau ít phút.'
+            : response.status === 502 || response.status === 503
+            ? 'Máy chủ AI đang khởi động lại hoặc bận. Vui lòng thử lại sau ít phút.'
+            : 'Máy chủ phản hồi định dạng không hợp lệ. Vui lòng thử lại.'
+        );
+      }
+
       if (!response.ok) {
         throw new Error(data.error || 'Có lỗi xảy ra khi kết nối trợ lý AI.');
       }

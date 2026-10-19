@@ -122,18 +122,22 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
 
 === VAI TRÒ VÀ TÔN CHỈ ===
 - Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
-- Luôn giữ thái độ chuyên nghiệp, ân cần. Nội dung trả lời phải thật NGẮN GỌN, RÕ RÀNG, SÚC TÍCH.
+- Luôn giữ thái độ chuyên nghiệp, ân cần.
 - TUYỆT ĐỐI KHÔNG dùng cụm từ "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ", LUÔN dùng đúng: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
 
-=== QUY TẮC TÌM KIẾM & TRẢ LỜI TỪ INTERNET ===
-1. ƯU TIÊN NGUỒN: Ưu tiên tìm kiếm các nguồn chính thống: Cổng Dịch vụ công Quốc gia (dichvucong.gov.vn), cổng thông tin các Bộ/Ngành, UBND các tỉnh/thành phố hoặc thuvienphapluat.vn.
-2. NỘI DUNG TƯ VẤN:
-   - Các giấy tờ, hồ sơ cần chuẩn bị.
-   - Nơi nộp hồ sơ hoặc đường dẫn dịch vụ công trực tuyến.
-   - Thời hạn giải quyết và lệ phí (nếu có thông tin).
-3. ĐỊNH DẠNG LINK: Nếu dẫn link Cổng Dịch vụ công Quốc gia, hãy dùng định dạng [Cổng Dịch vụ công Quốc gia](https://dichvucong.gov.vn). TUYỆT ĐỐI không dán URL dài trực tiếp làm chữ hiển thị.
-4. LƯU Ý MIỄN TRỪ: Vì đây là thông tin tra cứu mở rộng từ Internet, ở cuối câu trả lời BẮT BUỘC có dòng:
-*(Lưu ý: Thông tin trên được tổng hợp từ Internet để Quý bà con tham khảo. Để có thông tin chính xác nhất theo thẩm quyền địa phương, Quý bà con vui lòng liên hệ Trung tâm qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949).*`;
+=== QUY TẮC BẮT BUỘC VỀ ĐỘ DÀI & NỘI DUNG (PHẢI THẬT GỌN GÀNG) ===
+- Trả lời CỰC KỲ NGẮN GỌN, SÚC TÍCH, đi thẳng vào trọng tâm câu hỏi, KHÔNG viết dài dòng lan man.
+- Trình bày tối đa 3 ý chính ngắn gọn (mỗi ý từ 1 - 2 câu, xuống dòng dễ nhìn):
+  1. Thẩm quyền / Nơi nộp hồ sơ (ví dụ: Cơ quan Công an, Bộ phận Một cửa,...).
+  2. Các giấy tờ cốt lõi cần chuẩn bị (chỉ gạch đầu dòng các giấy tờ chính).
+  3. Thời hạn giải quyết hoặc lệ phí (nếu có thông tin).
+- TUYỆT ĐỐI KHÔNG trích dẫn toàn văn điều luật, không phân tích lý thuyết pháp lý dài dòng.
+- KHÔNG tự tạo danh sách nguồn ở cuối, hệ thống sẽ tự gắn 1 nguồn tham khảo duy nhất.
+
+=== QUY TẮC ĐƯỜNG LINK & LƯU Ý ===
+- Nếu nhắc đến Cổng Dịch vụ công Quốc gia, hãy dùng định dạng [Cổng Dịch vụ công Quốc gia](https://dichvucong.gov.vn). TUYỆT ĐỐI không dán URL dài thô.
+- Ở cuối câu trả lời thêm 1 dòng lưu ý ngắn gọn:
+*(Lưu ý: Thông tin trên được tổng hợp từ Internet để tham khảo. Quý bà con vui lòng liên hệ Trung tâm qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949).*`;
 
       const searchResponse = await getAiClient().models.generateContent({
         model: "gemini-3.8-flash",
@@ -155,7 +159,7 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
         return "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949 để được hỗ trợ.";
       }
 
-      // Trích xuất nguồn Internet từ groundingMetadata
+      // Trích xuất nguồn Internet từ groundingMetadata (CHỈ TRÍCH 1 NGUỒN DUY NHẤT)
       const grounding = searchResponse.candidates?.[0]?.groundingMetadata;
       if (grounding?.groundingChunks && grounding.groundingChunks.length > 0) {
         const sources: { title: string; url: string }[] = [];
@@ -170,8 +174,9 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
         }
 
         if (sources.length > 0) {
-          searchReply += "\n\n---\n🌐 **Nguồn tham khảo từ Internet:**\n" +
-            sources.slice(0, 4).map((s, idx) => `${idx + 1}. [${s.title}](${s.url})`).join("\n");
+          // Ưu tiên nguồn chính thống (.gov.vn hoặc thuvienphapluat.vn)
+          const primarySource = sources.find(s => s.url.includes('.gov.vn') || s.url.includes('thuvienphapluat.vn')) || sources[0];
+          searchReply += `\n\n---\n🌐 **Nguồn tham khảo:** [${primarySource.title}](${primarySource.url})`;
         }
       }
 
