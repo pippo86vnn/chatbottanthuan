@@ -342,8 +342,8 @@ export const ChatAssistant: React.FC = () => {
               backgroundImage: "url('https://i.postimg.cc/XYX6zMP6/LOGO-PHUONG.png')",
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
-              backgroundSize: "220px",
-              opacity: 0.05
+              backgroundSize: "264px",
+              opacity: 0.5
             }}
           />
           <div className="relative z-10 space-y-3 sm:space-y-4">
