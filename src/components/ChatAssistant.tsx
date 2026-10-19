@@ -201,7 +201,7 @@ export const ChatAssistant: React.FC = () => {
         const bestMatches = scoredData
           .filter((x) => x.score > 0)
           .sort((a, b) => b.score - a.score)
-          .slice(0, 5)
+          .slice(0, 12)
           .map((x) => x.item);
 
         if (bestMatches.length > 0) {
@@ -356,8 +356,8 @@ export const ChatAssistant: React.FC = () => {
                 >
                   <div
                     className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm overflow-hidden ${isUser
-                        ? 'bg-admin-700 text-white'
-                        : 'bg-white text-admin-900 border border-admin-800'
+                      ? 'bg-admin-700 text-white'
+                      : 'bg-white text-admin-900 border border-admin-800'
                       }`}
                   >
                     {isUser ? <User className="w-4 h-4 sm:w-5 sm:h-5" /> : <img src="https://i.postimg.cc/21pt1tmH/LOGO-TRUNG-TAM.png" alt="Bot" className="w-full h-full object-contain p-0.5 sm:p-1" />}
@@ -374,8 +374,8 @@ export const ChatAssistant: React.FC = () => {
 
                     <div
                       className={`p-3.5 sm:p-5 rounded-2xl text-base sm:text-lg leading-relaxed shadow-sm ${isUser
-                          ? 'bg-slate-200 text-slate-900 rounded-tr-none font-normal'
-                          : 'bg-admin-900 text-white rounded-tl-none font-normal'
+                        ? 'bg-slate-200 text-slate-900 rounded-tr-none font-normal'
+                        : 'bg-admin-900 text-white rounded-tl-none font-normal'
                         }`}
                     >
                       {msg.image && (
