@@ -174,9 +174,13 @@ export function useLiveVoice() {
 - Trả lời ĐÚNG TRỌNG TÂM. Ví dụ: Nếu khách hỏi "Lệ phí bao nhiêu?", chỉ cần đáp: "Dạ, lệ phí cho thủ tục này là [số tiền] ạ.", không cần đọc thêm hồ sơ, giấy tờ nếu khách không hỏi.
 - Nếu không nghe rõ do ồn, hãy nói: "Dạ, anh/chị có thể nói lại giúp tôi được không ạ, tôi nghe chưa rõ."
 
+=== QUY TẮC ĐƠN VỊ HÀNH CHÍNH ===
+- TUYỆT ĐỐI KHÔNG dùng các từ: "quận", "huyện", "cấp quận", "cấp huyện", "quận/huyện". Hiện nay địa phương không còn cấp Quận/Huyện, CHỈ dùng cấp "phường/xã".
+
 === QUY TẮC TÌM KIẾM DỮ LIỆU ===
 - Không tự bịa thông tin. Phải dùng công cụ "tra_cuu_thu_tuc" khi người dân hỏi về thủ tục cụ thể.
-- Nếu không tìm thấy, hãy nói: "Dạ xin lỗi anh chị, hiện tôi chưa tìm thấy thủ tục này. Anh chị vui lòng liên hệ trực tiếp Bộ phận Một cửa số 7 đường Tân Phú, hoặc gọi số 028 3785 0949 để được hỗ trợ ạ."`;
+- Nếu kết quả trả về thông tin tra cứu từ Internet, hãy nói lại thật tự nhiên trong 2-3 câu ngắn: Nêu rõ cơ quan giải quyết (cấp phường/xã) và giấy tờ cơ bản cần chuẩn bị.
+- Nếu hoàn toàn không tìm thấy, hãy nói: "Dạ xin lỗi anh chị, hiện tôi chưa tìm thấy thủ tục này. Anh chị vui lòng liên hệ trực tiếp Bộ phận Một cửa số 7 đường Tân Phú, hoặc gọi số 028 3785 0949 để được hỗ trợ ạ."`;
 
         ws.send(JSON.stringify({
           setup: {
@@ -270,7 +274,7 @@ export function useLiveVoice() {
                 return searchTerms.every(term => combinedText.includes(term));
               });
               
-              let responseText = "Không tìm thấy thủ tục nào khớp với từ khoá này.";
+              let responseText = "";
               if (results.length > 0) {
                 responseText = results.slice(0, 10).map((item: any) => {
                   let text = `Tên: ${item.ten_thu_tuc || 'Chưa cập nhật'}\n`;
@@ -286,6 +290,25 @@ export function useLiveVoice() {
                   }
                   return text.trim();
                 }).join('\n---\n');
+              } else {
+                // Không có trong nội bộ -> Kích hoạt Google Search qua Server
+                updateStatus(`Đang tìm kiếm Internet: "${tu_khoa}"...`, "text-amber-600");
+                try {
+                  const searchRes = await fetch('/api/voice-search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword: tu_khoa })
+                  });
+                  if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    responseText = searchData.reply || "Không tìm thấy thủ tục nào khớp với từ khoá này.";
+                  } else {
+                    responseText = "Không tìm thấy thủ tục nào khớp với từ khoá này.";
+                  }
+                } catch (searchErr) {
+                  console.warn('Lỗi voice search:', searchErr);
+                  responseText = "Không tìm thấy thủ tục nào khớp với từ khoá này.";
+                }
               }
               
               toolResponses.push({
@@ -313,7 +336,10 @@ export function useLiveVoice() {
       ws.onclose = (event) => {
         console.log("WebSocket closed:", event);
         if (event.code !== 1000 && event.code !== 1005) {
-             updateStatus(`Ngắt kết nối (Mã lỗi: ${event.code})`, "text-red-500");
+             const reasonMsg = event.code === 1008 
+               ? "Mã lỗi: 1008 - Khóa API Key không hợp lệ" 
+               : `Mã lỗi: ${event.code}`;
+             updateStatus(`Ngắt kết nối (${reasonMsg})`, "text-red-500");
         } else {
              updateStatus("Đã ngắt kết nối", "text-slate-500");
         }

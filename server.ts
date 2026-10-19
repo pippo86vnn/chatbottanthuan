@@ -55,6 +55,28 @@ async function getTTS(text: string) {
   return "";
 }
 
+// Chuẩn hóa đơn vị hành chính: Hiện nay không còn cấp Quận/Huyện, chỉ còn cấp Phường/Xã
+function cleanAdminUnits(text: string): string {
+  if (!text) return text;
+  return text
+    .replace(/cấp\s+quận\s*[\/,]\s*huyện/gi, 'cấp phường/xã')
+    .replace(/quận\s*[\/,]\s*huyện/gi, 'phường/xã')
+    .replace(/cấp\s+quận\s+hoặc\s+huyện/gi, 'cấp phường/xã')
+    .replace(/quận\s+hoặc\s+huyện/gi, 'phường hoặc xã')
+    .replace(/cấp\s+xã\s*[\/,]\s*quận/gi, 'cấp phường/xã')
+    .replace(/xã\s*[\/,]\s*quận/gi, 'phường/xã')
+    .replace(/cấp\s+quận/gi, 'cấp phường')
+    .replace(/cấp\s+huyện/gi, 'cấp xã')
+    .replace(/Công an quận/gi, 'Công an phường')
+    .replace(/Công an huyện/gi, 'Công an xã')
+    .replace(/UBND quận/gi, 'UBND phường')
+    .replace(/UBND huyện/gi, 'UBND xã')
+    .replace(/Bộ phận Một cửa quận/gi, 'Bộ phận Một cửa phường')
+    .replace(/Bộ phận Một cửa huyện/gi, 'Bộ phận Một cửa xã')
+    .replace(/Phòng Tư pháp quận/gi, 'Bộ phận Tư pháp phường')
+    .replace(/Phòng Tư pháp huyện/gi, 'Bộ phận Tư pháp xã');
+}
+
 app.post("/api/chat", chatLimiter, async (req, res) => {
   try {
     const { messages, image, context } = req.body;
@@ -125,10 +147,14 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
 - Luôn giữ thái độ chuyên nghiệp, ân cần.
 - TUYỆT ĐỐI KHÔNG dùng cụm từ "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ", LUÔN dùng đúng: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
 
+=== QUY TẮC ĐƠN VỊ HÀNH CHÍNH (ĐẶC BIỆT QUAN TRỌNG) ===
+- TUYỆT ĐỐI KHÔNG dùng các từ: "quận", "huyện", "cấp quận", "cấp huyện", "quận/huyện". Hiện nay địa phương không còn cấp Quận/Huyện, CHỈ dùng "phường/xã" (hoặc cơ quan cấp Tỉnh/Thành phố).
+- Khi hướng dẫn nơi nộp hồ sơ hoặc thẩm quyền, CHỈ dùng "phường/xã" (ví dụ: "Công an phường/xã", "Bộ phận Một cửa phường/xã") hoặc cơ quan chuyên ngành (ví dụ: "Cơ quan Công an", "Bảo hiểm xã hội").
+
 === QUY TẮC BẮT BUỘC VỀ ĐỘ DÀI & NỘI DUNG (PHẢI THẬT GỌN GÀNG) ===
 - Trả lời CỰC KỲ NGẮN GỌN, SÚC TÍCH, đi thẳng vào trọng tâm câu hỏi, KHÔNG viết dài dòng lan man.
 - Trình bày tối đa 3 ý chính ngắn gọn (mỗi ý từ 1 - 2 câu, xuống dòng dễ nhìn):
-  1. Thẩm quyền / Nơi nộp hồ sơ (ví dụ: Cơ quan Công an, Bộ phận Một cửa,...).
+  1. Thẩm quyền / Nơi nộp hồ sơ (ví dụ: Cơ quan Công an phường/xã, Bộ phận Một cửa,...).
   2. Các giấy tờ cốt lõi cần chuẩn bị (chỉ gạch đầu dòng các giấy tờ chính).
   3. Thời hạn giải quyết hoặc lệ phí (nếu có thông tin).
 - TUYỆT ĐỐI KHÔNG trích dẫn toàn văn điều luật, không phân tích lý thuyết pháp lý dài dòng.
@@ -180,7 +206,7 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
         }
       }
 
-      return searchReply;
+      return cleanAdminUnits(searchReply);
     };
 
     const hasInternalContext = Boolean(context && context.trim() !== 'Không tìm thấy thủ tục phù hợp.' && context.trim() !== '');
@@ -203,9 +229,10 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
 Bước 1: Kiểm tra xem câu hỏi có thể trả lời bằng DỮ LIỆU NỘI BỘ (bên dưới) hay không. Nếu có, BẮT BUỘC trả lời dựa trên dữ liệu đó. Nếu nơi nộp thông qua Cổng Dịch vụ công Quốc gia thì câu trả lời phải dẫn link đến [Cổng Dịch vụ công Quốc gia](https://dichvucong.gov.vn)
 Bước 2: Nếu DỮ LIỆU NỘI BỘ trống hoặc không chứa câu trả lời, hãy trả lời chính xác: "CHUA_CO_DU_LIEU_NOI_BO".
 
-=== QUY TẮC DANH XƯNG ĐỊA PHƯƠNG ===
+=== QUY TẮC DANH XƯNG & ĐƠN VỊ HÀNH CHÍNH ===
 - TUYỆT ĐỐI KHÔNG dùng "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ".
 - LUÔN dùng đúng cụm từ: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
+- TUYỆT ĐỐI KHÔNG dùng các từ: "quận", "huyện", "cấp quận", "cấp huyện", "quận/huyện". Hiện nay địa phương không còn cấp Quận/Huyện, CHỈ dùng cấp "phường/xã".
 
 === QUY TẮC TRÌNH BÀY (UI/UX) ===
 - Khi tư vấn 1 thủ tục cụ thể, bắt buộc đúng 3 ý theo thứ tự, mỗi ý CHỈ xuất hiện 1 LẦN DUY NHẤT, KHÔNG lặp lại nội dung giữa các ý:
@@ -255,6 +282,7 @@ ${context}`;
       }
     }
 
+    reply = cleanAdminUnits(reply);
     res.json({ reply, audioBase64: await getTTS(reply) });
   } catch (err: any) {
     console.error("Chat API error:", err);
@@ -264,6 +292,48 @@ ${context}`;
     res.status(500).json({ error: "Hệ thống đang bảo trì. Vui lòng quay lại sau." });
   }
 });
+
+// API tra cứu nhanh qua Google Search phục vụ LiveVoice
+app.post("/api/voice-search", chatLimiter, async (req, res) => {
+  try {
+    const { keyword } = req.body;
+    if (!keyword || typeof keyword !== 'string' || !keyword.trim()) {
+      return res.json({ reply: "Không tìm thấy thông tin phù hợp." });
+    }
+
+    const voicePrompt = `Bạn là Trợ lý AI hành chính công của Trung tâm Phục vụ hành chính công phường Tân Mỹ.
+Người dân đang gọi điện và nói chuyện trực tiếp qua Micro hỏi về: "${keyword}".
+Hiện dữ liệu nội bộ của phường không có thủ tục này. Bạn hãy dùng công cụ Google Search tra cứu nhanh quy định pháp luật và thẩm quyền mới nhất tại Việt Nam.
+
+=== YÊU CẦU ĐẶC BIỆT CHO TRỢ LÝ GIỌNG NÓI (VOICE) ===
+- Trả lời bằng văn phong giao tiếp trực tiếp ân cần, tự nhiên ("Dạ", "Thưa anh/chị").
+- CỰC KỲ NGẮN GỌN: Chỉ gói gọn trong 2 đến 3 câu nói ngắn, không đọc lan man.
+- TUYỆT ĐỐI KHÔNG dùng các từ: "quận", "huyện", "cấp quận", "cấp huyện", "quận/huyện". Hiện nay địa phương không còn cấp Quận/Huyện, CHỈ dùng "phường/xã".
+- Tập trung vào 2 ý:
+  1. Cơ quan giải quyết / Nơi nộp hồ sơ (ví dụ: Cơ quan Công an phường/xã, BHXH, Cổng DVC Bộ Công an...).
+  2. Các giấy tờ cơ bản cần chuẩn bị.
+- TUYỆT ĐỐI KHÔNG đọc link website hay URL, không dùng ký hiệu Markdown (*, #, gạch đầu dòng -), không trích dẫn điều luật dài.
+- Câu kết thúc ngắn gọn: "Do đây là thủ tục ngoài thẩm quyền phường, anh/chị vui lòng liên hệ đơn vị trên hoặc gọi hotline phường 028 3785 0949 để được hướng dẫn thêm ạ."`;
+
+    const response = await getAiClient().models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: [{ role: "user", parts: [{ text: `Thủ tục: ${keyword}` }] }],
+      config: {
+        systemInstruction: voicePrompt,
+        temperature: 0.2,
+        tools: [{ googleSearch: {} }]
+      }
+    });
+
+    const rawReply = response.text || "Hiện tại tôi chưa tìm thấy thông tin chính xác về nội dung này.";
+    const reply = cleanAdminUnits(rawReply);
+    res.json({ reply });
+  } catch (err: any) {
+    console.error("Voice search API error:", err);
+    res.status(500).json({ error: "Lỗi tra cứu giọng nói", reply: "Không tìm thấy thông tin phù hợp." });
+  }
+});
+
 
 // API ghi log chat bảo mật qua Server
 app.post("/api/log-chat", async (req, res) => {
