@@ -103,7 +103,7 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
 - KHÔNG giải thích dông dài các điều luật, KHÔNG viết lời chào/lời kết sáo rỗng.
 
 === QUY TẮC TRẢ LỜI ===
-Bước 1: Kiểm tra xem câu hỏi có thể trả lời bằng DỮ LIỆU NỘI BỘ (bên dưới) hay không. Nếu có, BẮT BUỘC trả lời dựa trên dữ liệu đó. Nếu nơi nộp thông qua Cổng dịch vụ Công trực tuyến thì câu trả lời phải dẫn link đến [Cổng Dịch vụ Công trực tuyến](https://dichvucong.gov.vn)
+Bước 1: Kiểm tra xem câu hỏi có thể trả lời bằng DỮ LIỆU NỘI BỘ (bên dưới) hay không. Nếu có, BẮT BUỘC trả lời dựa trên dữ liệu đó. Nếu nơi nộp thông qua Cổng Dịch vụ công Quốc gia thì câu trả lời phải dẫn link đến [Cổng Dịch vụ công Quốc gia](https://dichvucong.gov.vn)
 Bước 2: Nếu DỮ LIỆU NỘI BỘ trống hoặc không chứa câu trả lời, hoặc câu hỏi nằm ngoài phạm vi thủ tục dịch vụ công, xin lỗi và hướng dẫn Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949để được hỗ trợ.
 
 === QUY TẮC DANH XƯNG ĐỊA PHƯƠNG ===
