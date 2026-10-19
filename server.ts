@@ -88,45 +88,7 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
       return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
     }
 
-    // Trigger 3 (Part 1): Thiếu dữ liệu (Fallback) từ RAG
-    if (!context || context.trim() === 'Không tìm thấy thủ tục phù hợp.' || context.trim() === '') {
-      sendTelegramAlert('FALLBACK', userQuestion);
-      const replyText = "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Tôi đã ghi nhận câu hỏi và gửi đến Ban Quản trị để bổ sung. Bạn có thể quay lại sau nhé!";
-      return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
-    }
-
-    const systemInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Mỹ. Nhiệm vụ của bạn là hỗ trợ người dân và doanh nghiệp tra cứu thủ tục hành chính, giải đáp các thắc mắc về quy định, lịch tiếp công dân, địa chỉ liên hệ và thông tin hoạt động.
-
-=== VAI TRÒ VÀ TÔN CHỈ ===
-- Bạn là Trợ lý AI hành chính công của Phường Tân Mỹ. Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
-- Luôn giữ thái độ chuyên nghiệp, ân cần. Nội dung trả lời phải thật NGẮN GỌN, SÚC TÍCH.
-- KHÔNG giải thích dông dài các điều luật, KHÔNG viết lời chào/lời kết sáo rỗng.
-
-=== QUY TẮC TRẢ LỜI ===
-Bước 1: Kiểm tra xem câu hỏi có thể trả lời bằng DỮ LIỆU NỘI BỘ (bên dưới) hay không. Nếu có, BẮT BUỘC trả lời dựa trên dữ liệu đó. Nếu nơi nộp thông qua Cổng Dịch vụ công Quốc gia thì câu trả lời phải dẫn link đến [Cổng Dịch vụ công Quốc gia](https://dichvucong.gov.vn)
-Bước 2: Nếu DỮ LIỆU NỘI BỘ trống hoặc không chứa câu trả lời, hoặc câu hỏi nằm ngoài phạm vi thủ tục dịch vụ công, xin lỗi và hướng dẫn Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949để được hỗ trợ.
-
-=== QUY TẮC DANH XƯNG ĐỊA PHƯƠNG ===
-- TUYỆT ĐỐI KHÔNG dùng "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ".
-- LUÔN dùng đúng cụm từ: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
-
-=== QUY TẮC TRÌNH BÀY (UI/UX) ===
-- Khi tư vấn 1 thủ tục cụ thể, bắt buộc đúng 3 ý theo thứ tự, mỗi ý CHỈ xuất hiện 1 LẦN DUY NHẤT, KHÔNG lặp lại nội dung giữa các ý:
-  1. Giấy tờ cần chuẩn bị (chỉ liệt kê hồ sơ — KHÔNG nhắc lại cách nộp ở đây).
-  2. Thời gian xử lý & Lệ phí.
-  3. Căn cứ pháp lý — CHỈ thêm nếu dữ liệu nội bộ có sẵn số hiệu, trích dẫn CHÍNH XÁC nguyên văn, không viết tắt, không suy diễn, không tự bịa. Nếu dữ liệu không có, bỏ hẳn ý này, không đoán.
-- Dùng số thứ tự (1, 2, 3...), KHÔNG dùng ký tự đặc biệt (*, #) hay gạch đầu dòng (-, •).
-- Tách các đoạn bằng 1 dòng trống để dễ đọc trên điện thoại.
-
-=== BIỂU MẪU & VIDEO HƯỚNG DẪN (nếu dữ liệu có) ===
-- Nếu dữ liệu nội bộ có link biểu mẫu/video, thêm 1 đoạn RIÊNG, ĐẶT SAU CÙNG (sau ý số 3), KHÔNG chèn vào giữa các ý 1-3.
-- BẮT BUỘC định dạng Markdown ngắn gọn: [Tên biểu mẫu](URL) — TUYỆT ĐỐI KHÔNG dán nguyên URL dài làm chữ hiển thị, vì sẽ vỡ dòng trên điện thoại.
-  Ví dụ đúng: [Tải mẫu đơn](https://...) rồi xuống dòng [Xem video hướng dẫn](https://...)
-- KHÔNG tự tạo link nếu dữ liệu không có.
-
-DỮ LIỆU THỦ TỤC LIÊN QUAN:
-${context || 'Không tìm thấy thủ tục phù hợp.'}`;
-
+    // Chuẩn bị nội dung gửi đến Gemini
     const contents: any[] = [];
     for (const msg of messages.slice(0, -1)) {
       contents.push({
@@ -151,25 +113,141 @@ ${context || 'Không tìm thấy thủ tục phù hợp.'}`;
       parts: latestParts
     });
 
-    const response = await getAiClient().models.generateContent({
-      model: "gemini-3.8-flash",
-      contents: contents,
-      config: {
-        systemInstruction: systemInstruction,
-        temperature: 0.2,
-      }
-    });
-
-    const reply = response.text || "Xin lỗi, tôi không thể trả lời lúc này.";
-
-    // Trigger 3 (Part 2): Kết quả từ Gemini chứa pattern từ chối
-    const rejectionPatterns = ["tôi không có thông tin", "không tìm thấy dữ liệu", "không có dữ liệu", "chưa có dữ liệu", "không tìm thấy thủ tục", "chưa có thông tin"];
-    const isRejection = rejectionPatterns.some(pattern => reply.toLowerCase().includes(pattern));
-
-    if (isRejection) {
+    // Hàm gọi Gemini kèm Google Search Grounding khi dữ liệu nội bộ không có
+    const callGeminiWithSearch = async (): Promise<string> => {
       sendTelegramAlert('FALLBACK', userQuestion);
-      const replyText = "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949 để được hỗ trợ.";
-      return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
+
+      const internetInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Mỹ.
+Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ liệu trực tiếp về nội dung này. Bạn hãy sử dụng công cụ Google Search để tra cứu quy định pháp luật và thủ tục hành chính mới nhất tại Việt Nam để giải đáp cho Quý bà con.
+
+=== VAI TRÒ VÀ TÔN CHỈ ===
+- Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
+- Luôn giữ thái độ chuyên nghiệp, ân cần. Nội dung trả lời phải thật NGẮN GỌN, RÕ RÀNG, SÚC TÍCH.
+- TUYỆT ĐỐI KHÔNG dùng cụm từ "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ", LUÔN dùng đúng: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
+
+=== QUY TẮC TÌM KIẾM & TRẢ LỜI TỪ INTERNET ===
+1. ƯU TIÊN NGUỒN: Ưu tiên tìm kiếm các nguồn chính thống: Cổng Dịch vụ công Quốc gia (dichvucong.gov.vn), cổng thông tin các Bộ/Ngành, UBND các tỉnh/thành phố hoặc thuvienphapluat.vn.
+2. NỘI DUNG TƯ VẤN:
+   - Các giấy tờ, hồ sơ cần chuẩn bị.
+   - Nơi nộp hồ sơ hoặc đường dẫn dịch vụ công trực tuyến.
+   - Thời hạn giải quyết và lệ phí (nếu có thông tin).
+3. ĐỊNH DẠNG LINK: Nếu dẫn link Cổng Dịch vụ công Quốc gia, hãy dùng định dạng [Cổng Dịch vụ công Quốc gia](https://dichvucong.gov.vn). TUYỆT ĐỐI không dán URL dài trực tiếp làm chữ hiển thị.
+4. LƯU Ý MIỄN TRỪ: Vì đây là thông tin tra cứu mở rộng từ Internet, ở cuối câu trả lời BẮT BUỘC có dòng:
+*(Lưu ý: Thông tin trên được tổng hợp từ Internet để Quý bà con tham khảo. Để có thông tin chính xác nhất theo thẩm quyền địa phương, Quý bà con vui lòng liên hệ Trung tâm qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949).*`;
+
+      const searchResponse = await getAiClient().models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: contents,
+        config: {
+          systemInstruction: internetInstruction,
+          temperature: 0.2,
+          tools: [{ googleSearch: {} }],
+        }
+      });
+
+      let searchReply = searchResponse.text || "";
+
+      // Kiểm tra xem tìm kiếm có thất bại hoàn toàn không
+      const hardRejections = ["không tìm thấy thông tin", "tôi không tìm thấy", "không thể tìm thấy"];
+      const isSearchFailed = !searchReply || hardRejections.some(pattern => searchReply.toLowerCase().includes(pattern));
+
+      if (isSearchFailed) {
+        return "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949 để được hỗ trợ.";
+      }
+
+      // Trích xuất nguồn Internet từ groundingMetadata
+      const grounding = searchResponse.candidates?.[0]?.groundingMetadata;
+      if (grounding?.groundingChunks && grounding.groundingChunks.length > 0) {
+        const sources: { title: string; url: string }[] = [];
+        for (const chunk of grounding.groundingChunks) {
+          const web = (chunk as any).web;
+          if (web && web.uri) {
+            const title = web.title || web.uri;
+            if (!sources.some(s => s.url === web.uri)) {
+              sources.push({ title, url: web.uri });
+            }
+          }
+        }
+
+        if (sources.length > 0) {
+          searchReply += "\n\n---\n🌐 **Nguồn tham khảo từ Internet:**\n" +
+            sources.slice(0, 4).map((s, idx) => `${idx + 1}. [${s.title}](${s.url})`).join("\n");
+        }
+      }
+
+      return searchReply;
+    };
+
+    const hasInternalContext = Boolean(context && context.trim() !== 'Không tìm thấy thủ tục phù hợp.' && context.trim() !== '');
+
+    let reply = "";
+
+    if (!hasInternalContext) {
+      // Trường hợp 1: Dữ liệu nội bộ không có kết quả -> Tìm kiếm Google qua Gemini Search Grounding
+      reply = await callGeminiWithSearch();
+    } else {
+      // Trường hợp 2: Có dữ liệu nội bộ -> Ưu tiên trả lời từ dữ liệu nội bộ
+      const systemInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Mỹ. Nhiệm vụ của bạn là hỗ trợ người dân và doanh nghiệp tra cứu thủ tục hành chính, giải đáp các thắc mắc về quy định, lịch tiếp công dân, địa chỉ liên hệ và thông tin hoạt động.
+
+=== VAI TRÒ VÀ TÔN CHỈ ===
+- Bạn là Trợ lý AI hành chính công của Phường Tân Mỹ. Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
+- Luôn giữ thái độ chuyên nghiệp, ân cần. Nội dung trả lời phải thật NGẮN GỌN, SÚC TÍCH.
+- KHÔNG giải thích dông dài các điều luật, KHÔNG viết lời chào/lời kết sáo rỗng.
+
+=== QUY TẮC TRẢ LỜI ===
+Bước 1: Kiểm tra xem câu hỏi có thể trả lời bằng DỮ LIỆU NỘI BỘ (bên dưới) hay không. Nếu có, BẮT BUỘC trả lời dựa trên dữ liệu đó. Nếu nơi nộp thông qua Cổng Dịch vụ công Quốc gia thì câu trả lời phải dẫn link đến [Cổng Dịch vụ công Quốc gia](https://dichvucong.gov.vn)
+Bước 2: Nếu DỮ LIỆU NỘI BỘ trống hoặc không chứa câu trả lời, hãy trả lời chính xác: "CHUA_CO_DU_LIEU_NOI_BO".
+
+=== QUY TẮC DANH XƯNG ĐỊA PHƯƠNG ===
+- TUYỆT ĐỐI KHÔNG dùng "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ".
+- LUÔN dùng đúng cụm từ: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
+
+=== QUY TẮC TRÌNH BÀY (UI/UX) ===
+- Khi tư vấn 1 thủ tục cụ thể, bắt buộc đúng 3 ý theo thứ tự, mỗi ý CHỈ xuất hiện 1 LẦN DUY NHẤT, KHÔNG lặp lại nội dung giữa các ý:
+  1. Giấy tờ cần chuẩn bị (chỉ liệt kê hồ sơ — KHÔNG nhắc lại cách nộp ở đây).
+  2. Thời gian xử lý & Lệ phí.
+  3. Căn cứ pháp lý — CHỈ thêm nếu dữ liệu nội bộ có sẵn số hiệu, trích dẫn CHÍNH XÁC nguyên văn, không viết tắt, không suy diễn, không tự bịa. Nếu dữ liệu không có, bỏ hẳn ý này, không đoán.
+- Dùng số thứ tự (1, 2, 3...), KHÔNG dùng ký tự đặc biệt (*, #) hay gạch đầu dòng (-, •).
+- Tách các đoạn bằng 1 dòng trống để dễ đọc trên điện thoại.
+
+=== BIỂU MẪU & VIDEO HƯỚNG DẪN (nếu dữ liệu có) ===
+- Nếu dữ liệu nội bộ có link biểu mẫu/video, thêm 1 đoạn RIÊNG, ĐẶT SAU CÙNG (sau ý số 3), KHÔNG chèn vào giữa các ý 1-3.
+- BẮT BUỘC định dạng Markdown ngắn gọn: [Tên biểu mẫu](URL) — TUYỆT ĐỐI KHÔNG dán nguyên URL dài làm chữ hiển thị, vì sẽ vỡ dòng trên điện thoại.
+  Ví dụ đúng: [Tải mẫu đơn](https://...) rồi xuống dòng [Xem video hướng dẫn](https://...)
+- KHÔNG tự tạo link nếu dữ liệu không có.
+
+DỮ LIỆU THỦ TỤC LIÊN QUAN:
+${context}`;
+
+      const response = await getAiClient().models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: contents,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.2,
+        }
+      });
+
+      const initialReply = response.text || "Xin lỗi, tôi không thể trả lời lúc này.";
+
+      // Kiểm tra nếu Gemini xác nhận không có thông tin trong dữ liệu nội bộ
+      const rejectionPatterns = [
+        "chua_co_du_lieu_noi_bo",
+        "tôi không có thông tin",
+        "không tìm thấy dữ liệu",
+        "không có dữ liệu",
+        "chưa có dữ liệu",
+        "không tìm thấy thủ tục",
+        "chưa có thông tin"
+      ];
+      const isRejection = rejectionPatterns.some(pattern => initialReply.toLowerCase().includes(pattern));
+
+      if (isRejection) {
+        // Fallback sang Google Search
+        reply = await callGeminiWithSearch();
+      } else {
+        reply = initialReply;
+      }
     }
 
     res.json({ reply, audioBase64: await getTTS(reply) });

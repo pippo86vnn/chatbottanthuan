@@ -51,7 +51,8 @@ const TypewriterText: React.FC<{
           p: ({ node, ...props }) => <p {...props} className="mb-2 last:mb-0" />,
           ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-4 mb-2 last:mb-0 space-y-1" />,
           ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 mb-2 last:mb-0 space-y-1" />,
-          li: ({ node, ...props }) => <li {...props} />
+          li: ({ node, ...props }) => <li {...props} />,
+          hr: ({ node, ...props }) => <hr {...props} className="my-2.5 border-admin-700/60" />
         }}
       >
         {displayedContent}
@@ -408,7 +409,8 @@ export const ChatAssistant: React.FC = () => {
                               p: ({ node, ...props }) => <p {...props} className="mb-2 last:mb-0" />,
                               ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-4 mb-2 last:mb-0 space-y-1" />,
                               ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 mb-2 last:mb-0 space-y-1" />,
-                              li: ({ node, ...props }) => <li {...props} />
+                              li: ({ node, ...props }) => <li {...props} />,
+                              hr: ({ node, ...props }) => <hr {...props} className="my-2.5 border-admin-700/60" />
                             }}
                           >
                             {msg.content}
