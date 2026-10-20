@@ -1,6 +1,8 @@
 import express from "express";
+import http from "http";
 import path from "path";
 import { createServer as createViteServer } from "vite";
+import WebSocket, { WebSocketServer } from "ws";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import rateLimit from "express-rate-limit";
@@ -389,6 +391,85 @@ app.post("/api/rate-chat", async (req, res) => {
 });
 
 async function startServer() {
+  const server = http.createServer(app);
+
+  // WebSocket Server làm Proxy bảo mật cho Gemini Live Voice
+  const wss = new WebSocketServer({ noServer: true });
+
+  wss.on("connection", (clientWs: WebSocket) => {
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (!geminiKey) {
+      console.error("[Live Voice Proxy] Lỗi: Chưa cấu hình GEMINI_API_KEY trên server.");
+      clientWs.close(1008, "Chưa cấu hình GEMINI_API_KEY trên máy chủ");
+      return;
+    }
+
+    const geminiWsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${geminiKey}`;
+    const geminiWs = new WebSocket(geminiWsUrl);
+
+    const pendingQueue: Array<{ data: any; isBinary: boolean }> = [];
+
+    geminiWs.on("open", () => {
+      while (pendingQueue.length > 0) {
+        const item = pendingQueue.shift();
+        if (item) {
+          geminiWs.send(item.data, { binary: item.isBinary });
+        }
+      }
+    });
+
+    clientWs.on("message", (data: any, isBinary: boolean) => {
+      if (geminiWs.readyState === WebSocket.OPEN) {
+        geminiWs.send(data, { binary: isBinary });
+      } else if (geminiWs.readyState === WebSocket.CONNECTING) {
+        pendingQueue.push({ data, isBinary });
+      }
+    });
+
+    geminiWs.on("message", (data: any, isBinary: boolean) => {
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.send(data, { binary: isBinary });
+      }
+    });
+
+    clientWs.on("close", (code, reason) => {
+      if (geminiWs.readyState === WebSocket.OPEN || geminiWs.readyState === WebSocket.CONNECTING) {
+        geminiWs.close(1000, "Client closed");
+      }
+    });
+
+    clientWs.on("error", (err) => {
+      console.error("[Live Voice Proxy] Client WS error:", err);
+      geminiWs.close();
+    });
+
+    geminiWs.on("close", (code, reason) => {
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.close(code, reason.toString());
+      }
+    });
+
+    geminiWs.on("error", (err) => {
+      console.error("[Live Voice Proxy] Gemini WS error:", err);
+      if (clientWs.readyState === WebSocket.OPEN) {
+        clientWs.close(1011, "Gemini upstream error");
+      }
+    });
+  });
+
+  server.on("upgrade", (request, socket, head) => {
+    try {
+      const url = new URL(request.url || "", `http://${request.headers.host || "localhost"}`);
+      if (url.pathname === "/ws/live-voice") {
+        wss.handleUpgrade(request, socket, head, (ws) => {
+          wss.emit("connection", ws, request);
+        });
+      }
+    } catch (err) {
+      socket.destroy();
+    }
+  });
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -402,7 +483,8 @@ async function startServer() {
       res.sendFile(path.join(distPath, "index.html"));
     });
   }
-  app.listen(PORT, "0.0.0.0", () => {
+
+  server.listen(PORT, "0.0.0.0", () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }

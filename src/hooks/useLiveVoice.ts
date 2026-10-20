@@ -65,12 +65,6 @@ export function useLiveVoice() {
   };
 
   const startCall = async () => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      alert("Thiếu API Key Gemini (VITE_GEMINI_API_KEY) trong biến môi trường!");
-      return;
-    }
-
     try {
       updateStatus("Đang tải dữ liệu...", "text-amber-500");
       
@@ -107,7 +101,8 @@ export function useLiveVoice() {
       processor.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
-      const wsUrl = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${apiKey}`;
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws/live-voice`;
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
@@ -336,9 +331,9 @@ export function useLiveVoice() {
       ws.onclose = (event) => {
         console.log("WebSocket closed:", event);
         if (event.code !== 1000 && event.code !== 1005) {
-             const reasonMsg = event.code === 1008 
-               ? "Mã lỗi: 1008 - Khóa API Key không hợp lệ" 
-               : `Mã lỗi: ${event.code}`;
+             const reasonMsg = event.reason || (event.code === 1008 
+               ? "Mã lỗi: 1008 - Lỗi cấu hình máy chủ hoặc API Key" 
+               : `Mã lỗi: ${event.code}`);
              updateStatus(`Ngắt kết nối (${reasonMsg})`, "text-red-500");
         } else {
              updateStatus("Đã ngắt kết nối", "text-slate-500");
