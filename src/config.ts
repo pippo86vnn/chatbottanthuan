@@ -3,7 +3,7 @@ import { supabase } from './lib/supabase';
 // =========================================================================
 // SESSION ID — dùng để nối câu hỏi/đánh giá đúng người dùng, đúng phiên chat.
 // =========================================================================
-const SESSION_STORAGE_KEY = "tanmy_chat_session_id";
+const SESSION_STORAGE_KEY = "tanthuan_chat_session_id";
 
 function generateUuid(): string {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {

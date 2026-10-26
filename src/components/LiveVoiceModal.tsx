@@ -41,7 +41,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
         <div 
           className="absolute inset-0 z-0 pointer-events-none" 
           style={{
-            backgroundImage: "url('https://i.postimg.cc/XYX6zMP6/LOGO-PHUONG.png')",
+            backgroundImage: "url('https://i.postimg.cc/YqXjZ0x2/619882688-1228441526097687-6237252384064824193-n-(1).jpg')",
             backgroundRepeat: "no-repeat", 
             backgroundPosition: "center", 
             backgroundSize: "250px", 
@@ -65,7 +65,7 @@ export const LiveVoiceModal: React.FC<LiveVoiceModalProps> = ({ isOpen, onClose 
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               Live Voice Assistant
             </h2>
-            <p className="text-sm text-slate-500">Trò chuyện trực tiếp với Trợ lý AI Tân Mỹ</p>
+            <p className="text-sm text-slate-500">Trò chuyện trực tiếp với Trợ lý AI Tân Thuận</p>
           </div>
 
           {/* Metrics Dashboard */}

@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6">
             <div className="flex items-center gap-1.5">
               <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Số 7, đường Tân Phú, Phường Tân Mỹ, TP. Hồ Chí Minh</span>
+              <span>Số 342 Huỳnh Tấn Phát, phường Tân Thuận, TP. Hồ Chí Minh</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-amber-400 shrink-0" />
@@ -17,7 +17,7 @@ export const Footer: React.FC = () => {
             </div>
           </div>
           <p className="text-center md:text-right text-admin-400">
-            © 2026 Trung tâm Phục vụ Hành chính công Phường Tân Mỹ
+            © 2026 Trung tâm Phục vụ Hành chính công Phường Tân Thuận
           </p>
         </div>
       </div>

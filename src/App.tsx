@@ -58,10 +58,10 @@ export default function App() {
 
         {/* FAB Zalo OA - Nằm bên phải, cân bằng ngang hàng với Hỏi đáp FAQ */}
         <a
-          href="https://zalo.me/4060033006235308567"
+          href="https://zalo.me/175974918738385425"
           target="_blank"
           rel="noopener noreferrer"
-          title="Kết nối Zalo OA Phường Tân Mỹ"
+          title="Kết nối Zalo OA Phường Tân Thuận"
           className="relative group flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shrink-0"
         >
           <span className="absolute inset-0 rounded-full bg-blue-500/40 animate-ping pointer-events-none" />

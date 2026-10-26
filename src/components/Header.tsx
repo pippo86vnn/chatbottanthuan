@@ -31,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               <button onClick={() => document.documentElement.setAttribute('data-theme', 'red')} className="w-3.5 h-3.5 rounded-full bg-red-800 border border-admin-300 hover:scale-110 transition-transform" title="Đỏ"></button>
             </div>
             <span className="flex items-center gap-1 font-medium text-amber-300 text-xs">
-              <PhoneCall className="w-3.5 h-3.5" /> Hotline: 02837850949
+              <PhoneCall className="w-3.5 h-3.5" /> Hotline: (028) 38.72.80.32
             </span>
           </div>
         </div>
@@ -55,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab }) => {
               </span>
             </div>
             <h1 className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold tracking-tight text-white mt-1 truncate whitespace-nowrap">
-              PHƯỜNG TÂN MỸ- TP. HỒ CHÍ MINH
+              PHƯỜNG TÂN THUẬN - TP. HỒ CHÍ MINH
             </h1>
           </div>
         </div>

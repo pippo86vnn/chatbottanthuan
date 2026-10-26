@@ -76,14 +76,14 @@ export const Screensaver: React.FC = () => {
         <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white/95 p-3 rounded-full shadow-2xl flex items-center justify-center border-4 border-amber-400/80 animate-bounce">
           <img 
             src="https://i.postimg.cc/21pt1tmH/LOGO-TRUNG-TAM.png" 
-            alt="Logo Tân Mỹ" 
+            alt="Logo Tân Thuận" 
             className="w-full h-full object-contain pointer-events-none"
           />
         </div>
 
         <div className="space-y-2">
           <h2 className="text-amber-300 text-sm sm:text-base font-bold uppercase tracking-widest drop-shadow">
-            Trung tâm phục vụ hành chính công Phường Tân Mỹ
+            Trung tâm phục vụ hành chính công Phường Tân Thuận
           </h2>
           <p className="text-white/80 text-xs sm:text-sm font-medium">
             Trợ lý AI Hành chính công thông minh

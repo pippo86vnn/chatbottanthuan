@@ -66,7 +66,7 @@ export const ChatAssistant: React.FC = () => {
     {
       id: '1',
       role: 'assistant',
-      content: 'Xin chào Quý vị! Tôi là Trợ lý AI Hành chính công Phường Tân Mỹ. Tôi sẵn sàng hỗ trợ Quý vị tra cứu thủ tục, quy định và hướng dẫn hồ sơ. Quý vị cần hỗ trợ thông tin gì?',
+      content: 'Xin chào Quý vị! Tôi là Trợ lý AI Hành chính công Phường Tân Thuận. Tôi sẵn sàng hỗ trợ Quý vị tra cứu thủ tục, quy định và hướng dẫn hồ sơ. Quý vị cần hỗ trợ thông tin gì?',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
@@ -309,7 +309,7 @@ export const ChatAssistant: React.FC = () => {
       const errorMessage: ChatMessage = {
         id: errorMessageId,
         role: 'assistant',
-        content: `Xin lỗi, hệ thống AI đang gặp sự cố kết nối: ${err.message}. Vui lòng liên hệ trực tiếp Bộ phận Một cửa Phường Tân Mỹ (028.38123456) để được hỗ trợ ngay.`,
+        content: `Xin lỗi, hệ thống AI đang gặp sự cố kết nối: ${err.message}. Vui lòng liên hệ trực tiếp Bộ phận Một cửa Phường Tân Thuận ((028) 38.72.80.32) để được hỗ trợ ngay.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -336,13 +336,13 @@ export const ChatAssistant: React.FC = () => {
             </div>
             <div className="min-w-0 flex-1">
               <h2 className="font-bold text-sm sm:text-base md:text-lg sm:flex items-center gap-2 leading-tight">
-                <span>Trợ lý AI hành chính công Tân Mỹ</span>
+                <span>Trợ lý AI hành chính công Tân Thuận</span>
                 <span className="bg-emerald-500/20 text-emerald-300 text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full border border-emerald-500/30 w-fit inline-block ml-1.5 sm:ml-0">
                   Trực tuyến 24/7
                 </span>
               </h2>
               <p className="text-[10px] sm:text-xs text-admin-200 truncate mt-0.5 sm:mt-1">
-                Tra cứu thủ tục hành chính, quy định pháp luật và tư vấn hồ sơ dựa trên dữ liệu của Trung tâm phục vụ hành chính công Phường Tân Mỹ
+                Tra cứu thủ tục hành chính, quy định pháp luật và tư vấn hồ sơ dựa trên dữ liệu của Trung tâm phục vụ hành chính công Phường Tân Thuận
               </p>
             </div>
           </div>
@@ -353,7 +353,7 @@ export const ChatAssistant: React.FC = () => {
           <div
             className="absolute inset-0 z-0 pointer-events-none"
             style={{
-              backgroundImage: "url('https://i.postimg.cc/XYX6zMP6/LOGO-PHUONG.png')",
+              backgroundImage: "url('https://i.postimg.cc/YqXjZ0x2/619882688-1228441526097687-6237252384064824193-n-(1).jpg')",
               backgroundRepeat: "no-repeat",
               backgroundPosition: "center",
               backgroundSize: "264px",
@@ -380,7 +380,7 @@ export const ChatAssistant: React.FC = () => {
                   <div className={`max-w-[90%] sm:max-w-[85%] md:max-w-[80%] ${isUser ? 'text-right' : 'text-left'}`}>
                     <div className="flex items-center gap-1.5 sm:gap-2 mb-1 text-xs sm:text-sm text-slate-500">
                       <span className="font-medium text-slate-700">
-                        {isUser ? 'Bạn' : 'Trợ lý AI hành chính công Tân Mỹ'}
+                        {isUser ? 'Bạn' : 'Trợ lý AI hành chính công Tân Thuận'}
                       </span>
                       <span>•</span>
                       <span>{msg.timestamp}</span>
@@ -536,7 +536,7 @@ export const ChatAssistant: React.FC = () => {
           </div>
           <div className="hidden sm:flex items-center justify-between mt-2 px-1 text-[11px] text-slate-500">
             <span>Mẹo: Bạn có thể đính kèm ảnh tờ khai hoặc hồ sơ để trợ lý hỗ trợ kiểm tra.</span>
-            <span className="text-admin-900 font-medium text-right leading-tight">Trợ lý AI hành chính công<br />Tân Mỹ</span>
+            <span className="text-admin-900 font-medium text-right leading-tight">Trợ lý AI hành chính công<br />Tân Thuận</span>
           </div>
         </div>
 

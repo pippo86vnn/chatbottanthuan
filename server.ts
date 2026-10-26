@@ -108,7 +108,7 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
 
     if (isSensitive) {
       sendTelegramAlert('SECURITY', userQuestion);
-      const replyText = "Xin lỗi, tôi là trợ lý ảo hỗ trợ thủ tục. Với các vấn đề khiếu nại, phản ánh, vui lòng liên hệ trực tiếp số điện thoại đường dây nóng của UBND.";
+      const replyText = "Xin lỗi, tôi là trợ lý ảo hỗ trợ thủ tục. Với các vấn đề khiếu nại, phản ánh, vui lòng liên hệ trực tiếp số điện thoại đường dây nóng của Trung tâm Phục vụ hành chính công Phường Tân Thuận ((028) 38.72.80.32).";
       return res.json({ reply: replyText, audioBase64: await getTTS(replyText) });
     }
 
@@ -141,13 +141,13 @@ app.post("/api/chat", chatLimiter, async (req, res) => {
     const callGeminiWithSearch = async (): Promise<string> => {
       sendTelegramAlert('FALLBACK', userQuestion);
 
-      const internetInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Mỹ.
+      const internetInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Thuận.
 Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ liệu trực tiếp về nội dung này. Bạn hãy sử dụng công cụ Google Search để tra cứu quy định pháp luật và thủ tục hành chính mới nhất tại Việt Nam để giải đáp cho Quý bà con.
 
 === VAI TRÒ VÀ TÔN CHỈ ===
 - Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
 - Luôn giữ thái độ chuyên nghiệp, ân cần.
-- TUYỆT ĐỐI KHÔNG dùng cụm từ "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ", LUÔN dùng đúng: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
+- TUYỆT ĐỐI KHÔNG dùng cụm từ "Ủy ban nhân dân Phường Tân Thuận" hay "UBND Phường Tân Thuận", LUÔN dùng đúng: "Trung tâm Phục vụ hành chính công phường Tân Thuận".
 
 === QUY TẮC ĐƠN VỊ HÀNH CHÍNH (ĐẶC BIỆT QUAN TRỌNG) ===
 - TUYỆT ĐỐI KHÔNG dùng các từ: "quận", "huyện", "cấp quận", "cấp huyện", "quận/huyện". Hiện nay địa phương không còn cấp Quận/Huyện, CHỈ dùng "phường/xã" (hoặc cơ quan cấp Tỉnh/Thành phố).
@@ -165,7 +165,7 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
 === QUY TẮC ĐƯỜNG LINK & LƯU Ý ===
 - Nếu nhắc đến Cổng Dịch vụ công Quốc gia, hãy dùng định dạng [Cổng Dịch vụ công Quốc gia](https://dichvucong.gov.vn). TUYỆT ĐỐI không dán URL dài thô.
 - Ở cuối câu trả lời thêm 1 dòng lưu ý ngắn gọn:
-*(Lưu ý: Thông tin trên được tổng hợp từ Internet để tham khảo. Quý bà con vui lòng liên hệ Trung tâm qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949).*`;
+*(Lưu ý: Thông tin trên được tổng hợp từ Internet để tham khảo. Quý bà con vui lòng liên hệ Trung tâm qua [Zalo OA](https://zalo.me/175974918738385425) hoặc Hotline: (028) 38.72.80.32).*`;
 
       const searchResponse = await getAiClient().models.generateContent({
         model: "gemini-3.8-flash",
@@ -184,7 +184,7 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
       const isSearchFailed = !searchReply || hardRejections.some(pattern => searchReply.toLowerCase().includes(pattern));
 
       if (isSearchFailed) {
-        return "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/4060033006235308567) hoặc Hotline: 02837850949 để được hỗ trợ.";
+        return "Xin lỗi, hiện tại tôi chưa có dữ liệu chính xác về thủ tục này. Quý bà con liên hệ trực tiếp qua [Zalo OA](https://zalo.me/175974918738385425) hoặc Hotline: (028) 38.72.80.32 để được hỗ trợ.";
       }
 
       // Trích xuất nguồn Internet từ groundingMetadata (CHỈ TRÍCH 1 NGUỒN DUY NHẤT)
@@ -220,10 +220,10 @@ Hiện tại cơ sở dữ liệu nội bộ của phường chưa có dữ li�
       reply = await callGeminiWithSearch();
     } else {
       // Trường hợp 2: Có dữ liệu nội bộ -> Ưu tiên trả lời từ dữ liệu nội bộ
-      const systemInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Mỹ. Nhiệm vụ của bạn là hỗ trợ người dân và doanh nghiệp tra cứu thủ tục hành chính, giải đáp các thắc mắc về quy định, lịch tiếp công dân, địa chỉ liên hệ và thông tin hoạt động.
+      const systemInstruction = `Bạn là "Trợ lý AI hành chính công" của Trung tâm Phục vụ hành chính công phường Tân Thuận. Nhiệm vụ của bạn là hỗ trợ người dân và doanh nghiệp tra cứu thủ tục hành chính, giải đáp các thắc mắc về quy định, lịch tiếp công dân, địa chỉ liên hệ và thông tin hoạt động.
 
 === VAI TRÒ VÀ TÔN CHỈ ===
-- Bạn là Trợ lý AI hành chính công của Phường Tân Mỹ. Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
+- Bạn là Trợ lý AI hành chính công của Phường Tân Thuận. Xưng "tôi" và gọi công dân là "Quý bà con" hoặc "Anh/Chị".
 - Luôn giữ thái độ chuyên nghiệp, ân cần. Nội dung trả lời phải thật NGẮN GỌN, SÚC TÍCH.
 - KHÔNG giải thích dông dài các điều luật, KHÔNG viết lời chào/lời kết sáo rỗng.
 
@@ -232,8 +232,8 @@ Bước 1: Kiểm tra xem câu hỏi có thể trả lời bằng DỮ LIỆU N�
 Bước 2: Nếu DỮ LIỆU NỘI BỘ trống hoặc không chứa câu trả lời, hãy trả lời chính xác: "CHUA_CO_DU_LIEU_NOI_BO".
 
 === QUY TẮC DANH XƯNG & ĐƠN VỊ HÀNH CHÍNH ===
-- TUYỆT ĐỐI KHÔNG dùng "Ủy ban nhân dân Phường Tân Mỹ" hay "UBND Phường Tân Mỹ".
-- LUÔN dùng đúng cụm từ: "Trung tâm Phục vụ hành chính công phường Tân Mỹ".
+- TUYỆT ĐỐI KHÔNG dùng "Ủy ban nhân dân Phường Tân Thuận" hay "UBND Phường Tân Thuận".
+- LUÔN dùng đúng cụm từ: "Trung tâm Phục vụ hành chính công phường Tân Thuận".
 - TUYỆT ĐỐI KHÔNG dùng các từ: "quận", "huyện", "cấp quận", "cấp huyện", "quận/huyện". Hiện nay địa phương không còn cấp Quận/Huyện, CHỈ dùng cấp "phường/xã".
 
 === QUY TẮC TRÌNH BÀY (UI/UX) ===
@@ -303,7 +303,7 @@ app.post("/api/voice-search", chatLimiter, async (req, res) => {
       return res.json({ reply: "Không tìm thấy thông tin phù hợp." });
     }
 
-    const voicePrompt = `Bạn là Trợ lý AI hành chính công của Trung tâm Phục vụ hành chính công phường Tân Mỹ.
+    const voicePrompt = `Bạn là Trợ lý AI hành chính công của Trung tâm Phục vụ hành chính công phường Tân Thuận.
 Người dân đang gọi điện và nói chuyện trực tiếp qua Micro hỏi về: "${keyword}".
 Hiện dữ liệu nội bộ của phường không có thủ tục này. Bạn hãy dùng công cụ Google Search tra cứu nhanh quy định pháp luật và thẩm quyền mới nhất tại Việt Nam.
 
@@ -315,7 +315,7 @@ Hiện dữ liệu nội bộ của phường không có thủ tục này. Bạn
   1. Cơ quan giải quyết / Nơi nộp hồ sơ (ví dụ: Cơ quan Công an phường/xã, BHXH, Cổng DVC Bộ Công an...).
   2. Các giấy tờ cơ bản cần chuẩn bị.
 - TUYỆT ĐỐI KHÔNG đọc link website hay URL, không dùng ký hiệu Markdown (*, #, gạch đầu dòng -), không trích dẫn điều luật dài.
-- Câu kết thúc ngắn gọn: "Do đây là thủ tục ngoài thẩm quyền phường, anh/chị vui lòng liên hệ đơn vị trên hoặc gọi hotline phường 028 3785 0949 để được hướng dẫn thêm ạ."`;
+- Câu kết thúc ngắn gọn: "Do đây là thủ tục ngoài thẩm quyền phường, anh/chị vui lòng liên hệ đơn vị trên hoặc gọi hotline phường (028) 38.72.80.32 để được hướng dẫn thêm ạ."`;
 
     const response = await getAiClient().models.generateContent({
       model: "gemini-3.8-flash",

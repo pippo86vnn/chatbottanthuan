@@ -12,8 +12,8 @@ export interface NewsItem {
 }
 
 const DEFAULT_NEWS: NewsItem[] = [
-  { tieu_de: 'Chào mừng Quý bà con và doanh nghiệp đến với Cổng thông tin & Trợ lý AI Hành chính công Phường Tân Mỹ' },
-  { tieu_de: 'Bộ phận Một cửa Phường Tân Mỹ tiếp nhận và giải quyết hồ sơ thủ tục hành chính từ 7h30 - 17h00 các ngày làm việc' },
+  { tieu_de: 'Chào mừng Quý bà con và doanh nghiệp đến với Cổng thông tin & Trợ lý AI Hành chính công Phường Tân Thuận' },
+  { tieu_de: 'Bộ phận Một cửa Phường Tân Thuận tiếp nhận và giải quyết hồ sơ thủ tục hành chính từ 7h30 - 17h00 các ngày làm việc' },
   { tieu_de: 'Thực hiện nộp hồ sơ dịch vụ công trực tuyến nhanh chóng, công khai, minh bạch và tiết kiệm thời gian' }
 ];
 
