@@ -68,11 +68,16 @@ export function useLiveVoice() {
     try {
       updateStatus("Đang tải dữ liệu...", "text-amber-500");
       
-      // Load Supabase data
+      // Load Supabase data (non-blocking để không chặn cuộc gọi nếu mạng chập chờn)
       if (thuTucDataRef.current.length === 0) {
-        const { data, error } = await supabase.from('thu_tuc').select('*');
-        if (error) throw error;
-        thuTucDataRef.current = data || [];
+        try {
+          const { data, error } = await supabase.from('thu_tuc').select('*');
+          if (!error && data) {
+            thuTucDataRef.current = data;
+          }
+        } catch (dbErr) {
+          console.warn("Lỗi tải danh mục thủ tục từ Supabase:", dbErr);
+        }
       }
 
       updateStatus("Đang mở Micro...", "text-amber-500");
@@ -342,7 +347,12 @@ export function useLiveVoice() {
       };
 
     } catch (err: any) {
-      alert("Lỗi: " + err.message);
+      console.error("Live Voice start error:", err);
+      let msg = err.message || "Không thể kết nối.";
+      if (err.name === 'NotAllowedError' || err.message?.includes('Permission denied')) {
+        msg = "Vui lòng cấp quyền Micro trên trình duyệt để trò chuyện.";
+      }
+      alert("Lỗi: " + msg);
       endCall();
     }
   };

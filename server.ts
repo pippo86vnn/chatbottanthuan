@@ -14,7 +14,7 @@ dotenv.config({ path: '.env.local' });
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 // Bảo mật: Giảm giới hạn payload xuống 5MB để chống tấn công OOM
 app.use(express.json({ limit: "5mb" }));
 
